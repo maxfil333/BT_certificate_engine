@@ -1,0 +1,64 @@
+__*/
+__*
+data*/
+crypto.key
+*.exe
+*.xls
+*.xlsx
+
+
+# Игнорировать каталоги и файлы конфигурации PyCharm
+.idea/
+*.iml
+
+# Игнорировать файлы, сгенерированные системой операционной системы
+.DS_Store
+Thumbs.db
+
+# Игнорировать виртуальные окружения
+venv/
+ENV/
+env/
+.venv/
+.env
+encrypted.env
+
+# Игнорировать файлы, скомпилированные Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Игнорировать логи
+*.log
+
+# Игнорировать файлы данных
+*.sqlite3
+*.db
+
+# Игнорировать файлы, сгенерированные тестовыми инструментами
+.coverage
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Игнорировать выходные файлы из build процессов
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Игнорировать файлы, связанные с Jupyter Notebook
+.ipynb_checkpoints/
+
+# Игнорировать конфигурационные файлы IDE других разработчиков
+.vscode/
+*.code-workspace
+
+# Игнорировать файлы, связанные с контейнерами Docker
+docker-compose.override.yml
+.docker/
+
+# Исключения
+!.gitignore
