@@ -13,7 +13,6 @@ from logger import logger
 from utils import extract_text_with_fitz
 from utils import base64_encode_image, base64_encode_pil
 
-
 start = perf_counter()
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -21,18 +20,27 @@ ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
 client = OpenAI()
 
 
-def local_postprocessing(response):
+def local_postprocessing(response, connection):
     dct = json.loads(response)
+    dct['Номер сделки'] = ''
+    dct['Номер таможенной сделки'] = ''
 
     if len(dct['Номер коносамента']) < 5:
         dct['Номер коносамента'] = ''
+
+    if connection and dct['Номер коносамента']:
+        conos_id = dct['Номер коносамента']
+        trans_number = connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading(conos_id)
+        customs_trans = connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading(conos_id)
+        dct['Номер сделки'] = trans_number
+        dct['Номер таможенной сделки'] = customs_trans
 
     return json.dumps(dct, ensure_ascii=False, indent=4)
 
 
 # ___________________________ CHAT ___________________________
 
-def run_chat(*img_paths: str, detail='high', text_mode=False) -> str:
+def run_chat(*img_paths: str, detail='high', text_mode=False, connection=None) -> str:
     if text_mode:
         if len(img_paths) != 1:
             logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
@@ -64,7 +72,7 @@ def run_chat(*img_paths: str, detail='high', text_mode=False) -> str:
     logger.print(f'total_tokens: {response.usage.total_tokens}')
 
     response = response.choices[0].message.content
-    return local_postprocessing(response)
+    return local_postprocessing(response=response, connection=connection)
 
 
 # ___________________________ ASSISTANT ___________________________
