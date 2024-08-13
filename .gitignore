@@ -5,7 +5,9 @@ crypto.key
 *.exe
 *.xls
 *.xlsx
-
+IN/
+EDITED/
+CHECK/
 
 # Игнорировать каталоги и файлы конфигурации PyCharm
 .idea/
