@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from config import config
 from logger import logger
-from utils import extract_text_with_fitz
+from utils import extract_text_with_fitz, switch_to_latin
 from utils import base64_encode_image, base64_encode_pil
 
 start = perf_counter()
@@ -20,10 +20,11 @@ ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
 client = OpenAI()
 
 
-def local_postprocessing(response, connection):
+def certificate_local_postprocessing(response, connection):
     dct = json.loads(response)
-    dct['Номер сделки'] = ''
-    dct['Номер таможенной сделки'] = ''
+    dct['Номера сделок'] = []
+    dct['Номера таможенных сделок'] = []
+    dct['Номера фсс'] = '%None%'
 
     if len(dct['Номер коносамента']) < 5:
         dct['Номер коносамента'] = ''
@@ -32,15 +33,45 @@ def local_postprocessing(response, connection):
         conos_id = dct['Номер коносамента']
         trans_number = connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading(conos_id)
         customs_trans = connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading(conos_id)
-        dct['Номер сделки'] = trans_number
-        dct['Номер таможенной сделки'] = customs_trans
+        dct['Номера сделок'] = [x for x in trans_number.strip("|").split("|")]
+        dct['Номера таможенных сделок'] = [x for x in customs_trans.strip("|").split("|")]
 
+    return json.dumps(dct, ensure_ascii=False, indent=4)
+
+
+def appendix_local_postprocessing(response, connection):
+    dct = json.loads(response)
+    dct['result'] = {'fcc_numbers': None, "transaction_numbers": None}
+    fcc_numbers = []
+    for pos in dct['documents']:
+        doc_numbers = pos["Номера документов"]
+        for number in doc_numbers:
+            if number not in fcc_numbers:
+                fcc_numbers.append(number)
+    dct['result']['fcc_numbers'] = fcc_numbers
+
+    tr_numbers = []
+    if fcc_numbers:
+        for number in fcc_numbers:
+            if True:  # try in english
+                number_en = switch_to_latin(number)
+                customs_trans = connection.InteractionWithExternalApplications.TransactionNumberFromBrokerDocument(
+                    number_en)
+            if not customs_trans:  # then try in russian
+                number_ru = switch_to_latin(number, reverse=True)
+                customs_trans = connection.InteractionWithExternalApplications.TransactionNumberFromBrokerDocument(
+                    number_ru)
+            if customs_trans:  # if some result
+                customs_trans = [x.strip() for x in customs_trans.strip("|").split("|")]
+                tr_numbers.extend(customs_trans)
+
+        dct['result']['transaction_numbers'] = list(set(tr_numbers))
     return json.dumps(dct, ensure_ascii=False, indent=4)
 
 
 # ___________________________ CHAT ___________________________
 
-def run_chat(*img_paths: str, detail='high', text_mode=False, connection=None) -> str:
+def run_chat(*img_paths: str, prompt, response_format, detail='high', text_mode=False) -> str:
     if text_mode:
         if len(img_paths) != 1:
             logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
@@ -59,11 +90,11 @@ def run_chat(*img_paths: str, detail='high', text_mode=False, connection=None) -
         model=config['GPTMODEL'],
         temperature=0.1,
         messages=[
-            {"role": "system", "content": config['system_prompt']},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": content}
         ],
         max_tokens=200,
-        response_format=config['response_format']
+        response_format=response_format
     )
     logger.print('chat model:', response.model)
     logger.print(f'time: {perf_counter() - start:.2f}')
@@ -72,36 +103,4 @@ def run_chat(*img_paths: str, detail='high', text_mode=False, connection=None) -
     logger.print(f'total_tokens: {response.usage.total_tokens}')
 
     response = response.choices[0].message.content
-    return local_postprocessing(response=response, connection=connection)
-
-
-# ___________________________ ASSISTANT ___________________________
-
-def run_assistant(file_path):
-    assistant = client.beta.assistants.retrieve(assistant_id=ASSISTANT_ID)
-    message_file = client.files.create(file=open(file_path, "rb"), purpose="assistants")
-    # Create a thread and attach the file to the message
-    thread = client.beta.threads.create(
-        messages=[
-            {
-                "role": "user",
-                "content": " ",
-                "attachments": [{"file_id": message_file.id, "tools": [{"type": "file_search"}]}],
-            }
-        ]
-    )
-
-    run = client.beta.threads.runs.create_and_poll(
-        thread_id=thread.id, assistant_id=assistant.id
-    )
-    if run.status == 'completed':
-        logger.print('assistant model:', assistant.model)
-        logger.print(f'file_path: {file_path}')
-        logger.print(f'time: {perf_counter() - start:.2f}')
-        logger.print(f'completion_tokens: {run.usage.completion_tokens}')
-        logger.print(f'prompt_tokens: {run.usage.prompt_tokens}')
-        logger.print(f'total_tokens: {run.usage.total_tokens}')
-
-    messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
-    response = messages[0].content[0].text.value
-    return local_postprocessing(response)
+    return response

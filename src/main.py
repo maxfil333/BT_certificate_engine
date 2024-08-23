@@ -1,11 +1,12 @@
 import os
+import json
 import shutil
 from glob import glob
 import win32com.client
 from time import perf_counter
 
 from config import config
-from main_openai import run_chat
+from main_openai import run_chat, certificate_local_postprocessing, appendix_local_postprocessing
 from main_edit import image_preprocessor
 
 
@@ -14,7 +15,6 @@ from main_edit import image_preprocessor
 # TODO: формирование папки
 
 def main(connection: bool):
-
     # _____ CONNECT 1C _____
     if connection:
         v8com = win32com.client.Dispatch("V83.COMConnector")
@@ -23,32 +23,68 @@ def main(connection: bool):
     # _____ PREPROCESSING FROM IN TO EDITED _____
     image_preprocessor()
     in_folder, edit_folder, check_folder = config['IN'], config['EDITED'], config['CHECK']
-    images = [file for file in glob(f"{edit_folder}/*.*")
-              if os.path.splitext(file)[-1] in ['.jpeg', '.jpg', '.png']]
-    sorted_images = sorted(images, key=os.path.getctime)
 
-    # _____ RUN CHAT _____
-    for img in sorted_images:
-        try:
-            result = run_chat(img, connection=connection)
-            print('result:', result, sep='\n')
+    folders = sorted([file for file in glob(f"{edit_folder}/*") if os.path.isdir(file)], key=os.path.getctime)
 
-            original_image = os.path.join(in_folder, os.path.basename(img))
-            edited_image = os.path.join(edit_folder, os.path.basename(img))
+    # _____ GO THROUGH THE FOLDERS _____
+    for folder in folders:
+        print('-' * 50)
+        certificate, appendix = None, None
+        files = glob(os.path.join(folder, '*'))
+        files = list(filter(lambda x: os.path.splitext(x)[-1] in ['.jpeg', '.jpg', '.png', '.pdf'], files))
+        if len(files) == 1:
+            certificate = files[0]
+        elif len(files) == 2:
+            files_ = files.copy()
+            appendix = list(filter(lambda x: os.path.splitext(x)[0][-5:] == '_APDX', files))[0]
+            files_.pop(files_.index(appendix))
+            certificate = files_[0]
+        else:
+            print(f'Количество файлов в папке {folder} более 3-х')
+            continue
 
-            shutil.copy(os.path.join(check_folder, original_image), check_folder)
+        # __________ RUN CHAT __________
 
-            os.unlink(original_image)
-            os.unlink(edited_image)
-            json_path = os.path.join(check_folder, os.path.splitext(os.path.basename(img))[0] + '.json')
-            with open(json_path, 'w', encoding='utf-8') as file:
-                file.write(result)
+        # ___ ищем в сертификате ___
+        result = run_chat(certificate,
+                          prompt=config['certificate_system_prompt'],
+                          response_format=config['certificate_response_format']
+                          )
+        print('result_cert:', result, sep='\n')
+        result = certificate_local_postprocessing(response=result, connection=connection)
+        print('after local postprocessing:', result)
 
-        except Exception as error:
-            print(error)
+        # ___ ищем в приложении ___
+        if connection and appendix and (not json.loads(result)['Номера таможенных сделок']):
+            result_appendix = run_chat(appendix,
+                                       prompt=config['appendix_system_prompt'],
+                                       response_format=config['appendix_response_format']
+                                       )
+            print('result_apdx:', result_appendix, sep='\n')
+            result_appendix = appendix_local_postprocessing(response=result_appendix, connection=connection)
+            print('after local postprocessing:', result_appendix)
+
+            # ___ добавляем найденное в result ___
+            dct, dct_appendix = json.loads(result), json.loads(result_appendix)
+            fcc_numbers = dct_appendix['result']['fcc_numbers']
+            transaction_numbers = dct_appendix['result']['transaction_numbers']
+            dct['Номера фсс'] = fcc_numbers
+            dct['Номера таможенных сделок'] = transaction_numbers
+            result = json.dumps(dct, ensure_ascii=False, indent=4)
+            print('merged result', result)
+
+        # _____  COPY ORIGINAL FILE TO "CHECK" _____
+
+        with open(os.path.join(folder, 'main_file.txt'), 'r', encoding='utf-8') as f:
+            original_file = f.read().strip()
+        shutil.copy(original_file, os.path.join(check_folder, os.path.basename(original_file)))
+
+        # _____  DELETE ORIGINAL FILE FROM "IN" _____
+
+        os.unlink(original_file)
 
 
 if __name__ == '__main__':
     start = perf_counter()
     main(connection=True)
-    print(f'time: {perf_counter()-start:.2f}')
+    print(f'time: {perf_counter() - start:.2f}')

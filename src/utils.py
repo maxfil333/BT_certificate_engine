@@ -5,6 +5,7 @@ import json
 import fitz
 import base64
 import msvcrt
+import shutil
 from glob import glob
 
 import numpy as np
@@ -13,8 +14,40 @@ from io import BytesIO, StringIO
 from pdf2image import convert_from_path
 from rotator import main as rotate
 
-
 from logger import logger
+
+
+# _____ FOLDERS _____
+
+def delete_all_files(dir_path: str):
+    for folder_ in os.scandir(dir_path):
+        if folder_.is_dir():
+            shutil.rmtree(folder_.path)
+        else:
+            os.remove(folder_.path)
+
+
+# _____ COMMON _____
+
+def switch_to_latin(s: str, reverse: bool = False) -> str:
+    cyrillic_to_latin = {'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C',
+                         'Т': 'T', 'У': 'Y', 'Х': 'X'}
+    latin_to_cyrillic = {'A': 'А', 'B': 'В', 'E': 'Е', 'K': 'К', 'M': 'М', 'H': 'Н', 'O': 'О', 'P': 'Р', 'C': 'С',
+                         'T': 'Т', 'Y': 'У', 'X': 'Х'}
+    new = ''
+    if not reverse:
+        for letter in s:
+            if letter in cyrillic_to_latin:
+                new += cyrillic_to_latin[letter]
+            else:
+                new += letter
+    else:
+        for letter in s:
+            if letter in latin_to_cyrillic:
+                new += latin_to_cyrillic[letter]
+            else:
+                new += letter
+    return new
 
 
 # _____ PDF _____
@@ -44,9 +77,12 @@ def base64_encode_pil(image: Image.Image):
 
 # _________ IMAGES _________
 
-def image_split_top_bot(img_path: str) -> list[Image.Image]:
+def image_split_top_bot(image: str | np.ndarray) -> tuple[Image.Image, Image.Image]:
     # 1, 3 -> x; 2, 4 -> y
-    pil_image = Image.open(img_path)
+    if isinstance(image, np.ndarray):
+        pil_image = Image.fromarray(image)
+    else:
+        pil_image = Image.open(image)
     top = pil_image.crop((0, pil_image.height * 0.1, pil_image.width, pil_image.height // 2))
     bot = pil_image.crop((0, pil_image.height // 2, pil_image.width, pil_image.height))
     return top, bot
@@ -68,5 +104,3 @@ if __name__ == '__main__':
         bot = Image.fromarray(rotate(np.array(bot)))
         name = os.path.basename(os.path.splitext(img)[0])
         top.save(os.path.join(save_path, f'{name}.jpg'))
-
-

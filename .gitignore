@@ -7,6 +7,7 @@ crypto.key
 *.xlsx
 IN/
 EDITED/
+OUT/
 CHECK/
 
 # Игнорировать каталоги и файлы конфигурации PyCharm

@@ -24,12 +24,12 @@ else:
 
 config['IN'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
-config['CHECK'] = os.path.join(config['BASE_DIR'], 'CHECK')
+config['CHECK'] = os.path.join(config['BASE_DIR'], 'OUT')
 
 config['GPTMODEL'] = 'gpt-4o-2024-08-06'
 config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
 
-config['system_prompt'] = f"""
+config['certificate_system_prompt'] = f"""
 Ты бот, анализирующий документы (фитосанитарный контроль грузов, перевозимых по морю).
 Ты анализируешь документ следующим образом:
 1. Находишь номер документа (акта), который состоит из 15 цифр.
@@ -38,7 +38,7 @@ config['system_prompt'] = f"""
 4. Если информация не найдена, впиши "".
 """.strip()
 
-JSON_SCHEMA = {
+CERT_JSON_SCHEMA = {
     "name": "document",
     "schema": {
         "type": "object",
@@ -65,7 +65,47 @@ JSON_SCHEMA = {
     "strict": True
 }
 
-config['response_format'] = {"type": "json_schema", "json_schema": JSON_SCHEMA}
+config['certificate_response_format'] = {"type": "json_schema", "json_schema": CERT_JSON_SCHEMA}
+
+config['appendix_system_prompt'] = f"""
+Ты бот, анализирующий документы (фитосанитарный контроль грузов, перевозимых по морю).
+Ты анализируешь документ следующим образом:
+1. Для каждой позиции находишь номера фитосанитарных сертификатов и дату.
+2. Если информация не найдена, впиши "".
+""".strip()
+
+APDX_JSON_SCHEMA = {
+    "name": "document",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "documents": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "Номера документов": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "Дата": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["Номера документов", "Дата"],
+                    "additionalProperties": False
+                }
+            }
+        },
+        "required": ["documents"],
+        "additionalProperties": False
+    }
+}
+
+config['appendix_response_format'] = {"type": "json_schema", "json_schema": APDX_JSON_SCHEMA}
 
 
 if __name__ == '__main__':

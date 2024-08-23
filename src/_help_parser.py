@@ -42,7 +42,7 @@ def parse(pdf_path, n_folders, shift_folders, max_pdf_amount, save_folder=None):
 
 
 def save_random_sample(pdf_path, save_folder, k):
-    files = glob(os.path.join(pdf_path, r'*'))
+    files = glob(os.path.join(pdf_path, r'*.pdf'))
     try:
         files = random.sample(files, k=k)
     except ValueError:
@@ -57,13 +57,13 @@ def save_random_sample(pdf_path, save_folder, k):
 if __name__ == '__main__':
 
     pdf_path = r'C:\Users\Filipp\PycharmProjects\BT_certificate_engine\data'
-    save_path = r'C:\Users\Filipp\PycharmProjects\BT_certificate_engine\data_random'
+    save_path = r'C:\Users\Filipp\PycharmProjects\BT_certificate_engine\data_random_4'
 
     save_random_sample(pdf_path, save_path, k=50)
 
-    for file in glob(os.path.join(save_path, r'*.pdf')):
-        image = np.array(convert_from_path(file, first_page=0, last_page=1, fmt='jpg',
-                                           poppler_path=config["POPPLER_PATH"],
-                                           jpegopt={"quality": 100})[0])
-        jpg_path = os.path.splitext(file)[0] + '.jpg'
-        Image.fromarray(image).save(jpg_path, quality=100)
+    # for file in glob(os.path.join(save_path, r'*.pdf')):
+    #     image = np.array(convert_from_path(file, first_page=0, last_page=1, fmt='jpg',
+    #                                        poppler_path=config["POPPLER_PATH"],
+    #                                        jpegopt={"quality": 100})[0])
+    #     jpg_path = os.path.splitext(file)[0] + '.jpg'
+    #     Image.fromarray(image).save(jpg_path, quality=100)
