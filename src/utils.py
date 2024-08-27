@@ -1,20 +1,10 @@
 import os
-import io
-import sys
-import json
 import fitz
 import base64
-import msvcrt
 import shutil
-from glob import glob
-
 import numpy as np
 from PIL import Image
-from io import BytesIO, StringIO
-from pdf2image import convert_from_path
-from rotator import main as rotate
-
-from logger import logger
+from io import BytesIO
 
 
 # _____ FOLDERS _____
@@ -28,6 +18,17 @@ def delete_all_files(dir_path: str):
 
 
 # _____ COMMON _____
+
+def get_unique_filename(filepath):
+    if not os.path.exists(filepath):
+        return filepath
+    else:
+        base, ext = os.path.splitext(filepath)
+        counter = 1
+        while os.path.exists(f"{base}({counter}){ext}"):
+            counter += 1
+        return f"{base}({counter}){ext}"
+
 
 def switch_to_latin(s: str, reverse: bool = False) -> str:
     cyrillic_to_latin = {'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C',
@@ -89,18 +90,4 @@ def image_split_top_bot(image: str | np.ndarray) -> tuple[Image.Image, Image.Ima
 
 
 if __name__ == '__main__':
-    # pth = r'C:\Users\Filipp\PycharmProjects\BT_certificate_engine\data_random_6\16.jpg'
-    # top, bot = image_split_top_bot(pth)
-    # top, bot = Image.fromarray(rotate(np.array(top))), Image.fromarray(rotate(np.array(bot)))
-    #
-    # top.save(os.path.join(os.path.dirname(pth), '16top.jpg'))
-    # bot.save(os.path.join(os.path.dirname(pth), '16bot.jpg'))
-
-    save_path = r'C:\Users\Filipp\PycharmProjects\BT_certificate_engine\data_random_6'
-    for img in glob(r'C:\Users\Filipp\PycharmProjects\BT_certificate_engine\data_random\*.jpg'):
-        print(img)
-        top, bot = image_split_top_bot(img)
-        top = Image.fromarray(rotate(np.array(top)))
-        bot = Image.fromarray(rotate(np.array(bot)))
-        name = os.path.basename(os.path.splitext(img)[0])
-        top.save(os.path.join(save_path, f'{name}.jpg'))
+    pass

@@ -24,7 +24,9 @@ else:
 
 config['IN'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
-config['CHECK'] = os.path.join(config['BASE_DIR'], 'OUT')
+config['OUT'] = os.path.join(config['BASE_DIR'], 'OUT')
+config['untitled'] = os.path.join(config['OUT'], '0_Нераспознанные')
+os.makedirs(config['untitled'], exist_ok=True)
 
 config['GPTMODEL'] = 'gpt-4o-2024-08-06'
 config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
