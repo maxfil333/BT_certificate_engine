@@ -33,8 +33,8 @@ def certificate_local_postprocessing(response, connection):
         conos_id = dct['Номер коносамента']
         trans_number = connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading(conos_id)
         customs_trans = connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading(conos_id)
-        dct['Номера сделок'] = [x for x in trans_number.strip("|").split("|")]
-        dct['Номера таможенных сделок'] = [x for x in customs_trans.strip("|").split("|")]
+        dct['Номера сделок'] = [x.strip() for x in trans_number.strip("|").split("|") if x.strip()]
+        dct['Номера таможенных сделок'] = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
 
     return json.dumps(dct, ensure_ascii=False, indent=4)
 
@@ -62,7 +62,7 @@ def appendix_local_postprocessing(response, connection):
                 customs_trans = connection.InteractionWithExternalApplications.TransactionNumberFromBrokerDocument(
                     number_ru)
             if customs_trans:  # if some result
-                customs_trans = [x.strip() for x in customs_trans.strip("|").split("|")]
+                customs_trans = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
                 tr_numbers.extend(customs_trans)
 
         dct['result']['transaction_numbers'] = list(set(tr_numbers))
