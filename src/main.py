@@ -7,12 +7,10 @@ from time import perf_counter
 
 from config import config
 from main_openai import run_chat, certificate_local_postprocessing, appendix_local_postprocessing
-from main_edit import image_preprocessor
+from main_edit import image_preprocessor, folder_former
 
 
 # TODO: обработчик pdf
-# TODO: shutil.copy оригинальный файл а не обрезанный
-# TODO: формирование папки
 
 def main(connection: bool):
     # _____ CONNECT 1C _____
@@ -22,13 +20,14 @@ def main(connection: bool):
 
     # _____ PREPROCESSING FROM IN TO EDITED _____
     image_preprocessor()
-    in_folder, edit_folder, check_folder = config['IN'], config['EDITED'], config['CHECK']
+    in_folder, edit_folder, out_folder = config['IN'], config['EDITED'], config['OUT']
 
     folders = sorted([file for file in glob(f"{edit_folder}/*") if os.path.isdir(file)], key=os.path.getctime)
 
     # _____ GO THROUGH THE FOLDERS _____
     for folder in folders:
         print('-' * 50)
+        print(folder)
         certificate, appendix = None, None
         files = glob(os.path.join(folder, '*'))
         files = list(filter(lambda x: os.path.splitext(x)[-1] in ['.jpeg', '.jpg', '.png', '.pdf'], files))
@@ -73,11 +72,12 @@ def main(connection: bool):
             result = json.dumps(dct, ensure_ascii=False, indent=4)
             print('merged result', result)
 
-        # _____  COPY ORIGINAL FILE TO "CHECK" _____
+        # _____  COPY ORIGINAL FILE TO "OUT" _____
 
         with open(os.path.join(folder, 'main_file.txt'), 'r', encoding='utf-8') as f:
             original_file = f.read().strip()
-        shutil.copy(original_file, os.path.join(check_folder, os.path.basename(original_file)))
+
+        folder_former(json_string=result, original_file=original_file, out_path=config['OUT'])
 
         # _____  DELETE ORIGINAL FILE FROM "IN" _____
 
