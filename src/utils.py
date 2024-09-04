@@ -2,9 +2,12 @@ import os
 import fitz
 import base64
 import shutil
+import PyPDF2
 import numpy as np
 from PIL import Image
 from io import BytesIO
+
+from logger import logger
 
 
 # _____ FOLDERS _____
@@ -60,6 +63,40 @@ def extract_text_with_fitz(pdf_path):
         page = document.load_page(page_num)  # загружаем страницу
         text += page.get_text()  # извлекаем текст
     return text
+
+
+def is_scanned_pdf(file_path, pages_to_analyse=None):
+    try:
+        # Открытие PDF файла
+        with open(file_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            num_pages = len(reader.pages)
+            if pages_to_analyse:
+                pages = list(map(lambda x: x - 1, pages_to_analyse))
+            else:
+                pages = list(range(num_pages))
+
+            # Проверка текста на каждой странице
+            scan_list, digit_list = [], []
+            for page_num in pages:
+                page = reader.pages[page_num]
+                text = page.extract_text()
+                if text.strip():
+                    digit_list.append(page_num)  # Если текст найден
+                else:
+                    scan_list.append(page_num)  # Если текст не найден
+
+            if not scan_list:
+                return False
+            elif not digit_list:
+                return True
+            else:
+                logger.print(f'! utils.is_scanned_pdf: mixed pages types in {file_path} !')
+                return 0 in scan_list  # определяем по первой странице
+
+    except Exception as e:
+        logger.print(f"Error reading PDF file: {e}")
+        return None
 
 
 # _________ ENCODERS _________
