@@ -7,7 +7,7 @@ from glob import glob
 from pdf2image import convert_from_path
 
 from config import config
-from utils import delete_all_files, image_split_top_bot, get_unique_filename
+from utils import delete_all_files, image_split_top_bot, get_unique_filename, is_scanned_pdf
 
 
 def image_preprocessor() -> None:
@@ -34,23 +34,31 @@ def image_preprocessor() -> None:
 
         # _____ pdf _____
         if ext == '.pdf':
-            images = convert_from_path(file, first_page=1, last_page=2, fmt='jpg',
-                                       poppler_path=config["POPPLER_PATH"],
-                                       jpegopt={"quality": 100})
+            scanned = is_scanned_pdf(file)
 
-            if len(images) >= 2:
-                certificate, appendix = np.array(images[0]), np.array(images[1])
+            # ___ pdf scanned ___
+            if scanned:
+                images = convert_from_path(file, first_page=1, last_page=2, fmt='jpg',
+                                           poppler_path=config["POPPLER_PATH"],
+                                           jpegopt={"quality": 100})
+
+                if len(images) >= 2:
+                    certificate, appendix = np.array(images[0]), np.array(images[1])
+                else:
+                    certificate, appendix = np.array(images[0]), None
+
+                cer_top, cer_bot = image_split_top_bot(certificate)
+                save_path = os.path.splitext(save_path)[0] + '.jpg'
+                cer_top.save(save_path, quality=100)
+
+                if appendix is not None:
+                    apdx_top, apdx_bot = image_split_top_bot(appendix)
+                    save_path = os.path.splitext(save_path)[0] + '_APDX' + '.jpg'
+                    apdx_top.save(save_path, quality=100)
+
+            # ___ pdf digital ___
             else:
-                certificate, appendix = np.array(images[0]), None
-
-            cer_top, cer_bot = image_split_top_bot(certificate)
-            save_path = os.path.splitext(save_path)[0] + '.jpg'
-            cer_top.save(save_path, quality=100)
-
-            if appendix is not None:
-                apdx_top, apdx_bot = image_split_top_bot(appendix)
-                save_path = os.path.splitext(save_path)[0] + '_APDX' + '.jpg'
-                apdx_top.save(save_path, quality=100)
+                shutil.copy(file, save_path)
 
         # _____ images _____
         else:
