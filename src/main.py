@@ -4,6 +4,7 @@ import shutil
 from glob import glob
 import win32com.client
 from time import perf_counter
+from openai import PermissionDeniedError
 
 from config import config
 from main_openai import run_chat, certificate_local_postprocessing, appendix_local_postprocessing
@@ -13,6 +14,9 @@ from main_edit import image_preprocessor, folder_former
 # TODO: обработчик pdf
 
 def main(connection: bool):
+    if not connection:
+        print('!!!!! <no connection> !!!!!')
+
     # _____ CONNECT 1C _____
     if connection:
         v8com = win32com.client.Dispatch("V83.COMConnector")
@@ -24,15 +28,17 @@ def main(connection: bool):
 
     folders = sorted([file for file in glob(f"{edit_folder}/*") if os.path.isdir(file)], key=os.path.getctime)
 
-    # _____ GO THROUGH THE FOLDERS _____
+    # _____ GO THROUGH THE EDITED FOLDERS _____
     for folder in folders:
-        print('-' * 50)
-        print(folder)
+        print('-' * 50, folder, sep='\n')
         certificate, appendix = None, None
         files = glob(os.path.join(folder, '*'))
         files = list(filter(lambda x: os.path.splitext(x)[-1] in ['.jpeg', '.jpg', '.png', '.pdf'], files))
+        certificate_type = 'jpg'
         if len(files) == 1:
             certificate = files[0]
+            if os.path.splitext(certificate)[-1] == '.pdf':
+                certificate_type = 'pdf'  # digital pdf
         elif len(files) == 2:
             files_ = files.copy()
             appendix = list(filter(lambda x: os.path.splitext(x)[0][-5:] == '_APDX', files))[0]
@@ -44,10 +50,13 @@ def main(connection: bool):
 
         # __________ RUN CHAT __________
 
+        text_mode = bool(certificate_type == 'pdf')
+
         # ___ ищем в сертификате ___
         result = run_chat(certificate,
                           prompt=config['certificate_system_prompt'],
-                          response_format=config['certificate_response_format']
+                          response_format=config['certificate_response_format'],
+                          text_mode=text_mode
                           )
         print('result_cert:', result, sep='\n')
         result = certificate_local_postprocessing(response=result, connection=connection)
@@ -86,5 +95,8 @@ def main(connection: bool):
 
 if __name__ == '__main__':
     start = perf_counter()
-    main(connection=True)
+    try:
+        main(connection=True)
+    except PermissionDeniedError:
+        print('ОШИБКА ВЫПОЛНЕНИЯ:\n!!! Включите VPN !!!')
     print(f'time: {perf_counter() - start:.2f}')
