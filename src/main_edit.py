@@ -47,7 +47,7 @@ def image_preprocessor() -> None:
                 else:
                     certificate, appendix = np.array(images[0]), None
 
-                cer_top, cer_bot = image_split_top_bot(certificate)
+                cer_top, cer_bot = image_split_top_bot(certificate, top_y_shift=0)
                 save_path = os.path.splitext(save_path)[0] + '.jpg'
                 cer_top.save(save_path, quality=100)
 

@@ -121,14 +121,16 @@ def base64_encode_pil(image: Image.Image):
 
 # _________ IMAGES _________
 
-def image_split_top_bot(image: str | np.ndarray) -> tuple[Image.Image, Image.Image]:
+def image_split_top_bot(image: str | np.ndarray, top_y_shift=0.1) -> tuple[Image.Image, Image.Image]:
     # 1, 3 -> x; 2, 4 -> y
     if isinstance(image, np.ndarray):
         pil_image = Image.fromarray(image)
     else:
         pil_image = Image.open(image)
-    top = pil_image.crop((0, pil_image.height * 0.1, pil_image.width, pil_image.height // 2))
-    bot = pil_image.crop((0, pil_image.height // 2, pil_image.width, pil_image.height))
+    top = pil_image.crop((0, pil_image.height * top_y_shift,
+                          pil_image.width, pil_image.height // 2))
+    bot = pil_image.crop((0, pil_image.height // 2,
+                          pil_image.width, pil_image.height))
     return top, bot
 
 
