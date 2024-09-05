@@ -55,11 +55,11 @@ def appendix_local_postprocessing(response, connection):
         for number in fcc_numbers:
             if True:  # try in english
                 number_en = switch_to_latin(number)
-                customs_trans = connection.InteractionWithExternalApplications.TransactionNumberFromBrokerDocument(
+                customs_trans = connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument(
                     number_en)
             if not customs_trans:  # then try in russian
                 number_ru = switch_to_latin(number, reverse=True)
-                customs_trans = connection.InteractionWithExternalApplications.TransactionNumberFromBrokerDocument(
+                customs_trans = connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument(
                     number_ru)
             if customs_trans:  # if some result
                 customs_trans = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
