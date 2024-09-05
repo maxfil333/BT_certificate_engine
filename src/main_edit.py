@@ -21,7 +21,7 @@ def image_preprocessor() -> None:
     # ___ create new folders ___
 
     files = [file for file in glob(f"{in_folder}/*.*")
-             if os.path.splitext(file)[-1] in ['.jpeg', '.jpg', '.png', '.pdf']]
+             if os.path.splitext(file)[-1].lower() in ['.jpeg', '.jpg', '.png', '.pdf']]
 
     for file in sorted(files, key=os.path.getctime):
         base, ext = os.path.splitext(file)
