@@ -14,8 +14,7 @@ from main_edit import image_preprocessor, folder_former
 # TODO: обработчик pdf
 
 def main(connection: bool):
-    if not connection:
-        print('!!!!! <no connection> !!!!!')
+    print(f"CONNECTION: <{connection}>")
 
     # _____ CONNECT 1C _____
     if connection:
