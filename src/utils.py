@@ -56,9 +56,15 @@ def switch_to_latin(s: str, reverse: bool = False) -> str:
 
 # _____ PDF _____
 
-def extract_text_with_fitz(pdf_path):
+def extract_text_with_fitz(pdf_path, only_first_page: bool = False):
     document = fitz.open(pdf_path)
+
     text = ""
+
+    if only_first_page:
+        text += document.load_page(0).get_text()
+        return text
+
     for page_num in range(len(document)):
         page = document.load_page(page_num)  # загружаем страницу
         text += page.get_text()  # извлекаем текст
@@ -81,8 +87,8 @@ def is_scanned_pdf(file_path, pages_to_analyse=None):
             for page_num in pages:
                 page = reader.pages[page_num]
                 text = page.extract_text()
-                if text.strip():
-                    digit_list.append(page_num)  # Если текст найден
+                if len(text.strip()) > 100:
+                    digit_list.append(page_num)  # Если текст найден (в достаточном количестве)
                 else:
                     scan_list.append(page_num)  # Если текст не найден
 
