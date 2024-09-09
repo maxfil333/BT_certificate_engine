@@ -71,11 +71,20 @@ def appendix_local_postprocessing(response, connection):
 
 # ___________________________ CHAT ___________________________
 
-def run_chat(*img_paths: str, prompt, response_format, detail='high', text_mode=False) -> str:
-    if text_mode:
+def run_chat(*img_paths: str, prompt, response_format, detail='high', text_mode_content: str | None = None) -> str:
+    """
+    :param img_paths: images paths
+    :param prompt: system prompt
+    :param response_format: {"type": "json_schema", "json_schema": <JSON_SCHEMA>}
+    :param detail: image quality
+    :param text_mode_content: if not None, text_content for messages.user.content
+    :return: json-string
+    """
+
+    if text_mode_content:
         if len(img_paths) != 1:
             logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
-        content = extract_text_with_fitz(img_paths[0])
+        content = text_mode_content
     else:
         content = []
         for img_path in img_paths:
