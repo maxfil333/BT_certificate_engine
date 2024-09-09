@@ -46,6 +46,11 @@ CERT_JSON_SCHEMA = {
     "schema": {
         "type": "object",
         "properties": {
+            "Тип документа": {
+                "type": "string",
+                "description": "Коносамент или Акт Фитосанитарного Контроля или Заключение или Протокол",
+                "enum": ["коносамент", "акт", "заключение", "протокол"]
+            },
             "Номер документа": {
                 "type": "string"
             },
@@ -59,10 +64,11 @@ CERT_JSON_SCHEMA = {
                 "type": "string"
             },
             "Номер коносамента": {
+                "description": "Номер коносамента | bill of lading number | b/l number | Waybill number",
                 "type": "string"
             }
         },
-        "required": ["Номер документа", "Номера контейнеров", "Судно", "Номер коносамента"],
+        "required": ["Тип документа", "Номер документа", "Номера контейнеров", "Судно", "Номер коносамента"],
         "additionalProperties": False
     },
     "strict": True
