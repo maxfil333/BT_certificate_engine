@@ -1,4 +1,5 @@
 import os
+import re
 import fitz
 import json
 import base64
@@ -33,12 +34,12 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
     if doc_type == 'коносамент':
         if not doc_conos:
             doc_conos = 'untitled_conos'
-        new_name = doc_conos + os.path.splitext(original_file)[-1]
+        new_name = sanitize_filename(doc_conos + os.path.splitext(original_file)[-1])
     else:
         if not doc_number:
             transliteration = {'акт': 'act', 'коносамент': 'conos', 'заключение': 'report', 'протокол': 'protocol'}
             doc_number = f'untitled_{transliteration[doc_type]}'
-        new_name = doc_number + os.path.splitext(original_file)[-1]
+        new_name = sanitize_filename(doc_number + os.path.splitext(original_file)[-1])
 
     # ___ distribute into folders ___
     if not transactions:
@@ -67,6 +68,19 @@ def get_unique_filename(filepath):
         return f"{base}({counter}){ext}"
 
 
+def sanitize_filename(filename: str) -> str:
+    # Заменяем все недопустимые символы на пробелы
+    sanitized = re.sub(r'[\<\>\/\"\\\|\?\*]', ' ', filename)
+
+    # Убираем повторяющиеся пробелы
+    sanitized = re.sub(r'\s+', ' ', sanitized)
+
+    # Убираем пробелы в начале и конце строки
+    sanitized = sanitized.strip()
+
+    return sanitized
+
+
 def switch_to_latin(s: str, reverse: bool = False) -> str:
     cyrillic_to_latin = {'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C',
                          'Т': 'T', 'У': 'Y', 'Х': 'X'}
@@ -90,15 +104,14 @@ def switch_to_latin(s: str, reverse: bool = False) -> str:
 
 # _____ PDF _____
 
-def count_pages(file_path):
+def count_pages(file_path: str) -> int | None:
     try:
         # Открытие PDF файла
         with open(file_path, 'rb') as file:
             reader = PyPDF2.PdfReader(file)
             return len(reader.pages)
 
-    except Exception as e:
-        logger.print(f"Error reading PDF file: {e}")
+    except Exception:
         return None
 
 
