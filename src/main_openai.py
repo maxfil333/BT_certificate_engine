@@ -82,8 +82,6 @@ def run_chat(*img_paths: str, prompt, response_format, detail='high', text_mode_
     """
 
     if text_mode_content:
-        if len(img_paths) != 1:
-            logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
         content = text_mode_content
     else:
         content = []
