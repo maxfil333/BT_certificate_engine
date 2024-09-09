@@ -70,10 +70,9 @@ def image_preprocessor() -> None:
             top, _ = image_split_top_bot(file)
             top.save(save_path, quality=100)
 
-        with open(os.path.join(folder_path, 'main_file.txt'), 'w', encoding='utf-8') as f:
-            f.write(file)
-            f.write('\n')
-            f.write('|'.join(file_params))
+        with open(os.path.join(folder_path, 'main_file.json'), 'w', encoding='utf-8') as f:
+            dct = {"path": file, "params": '|'.join(file_params)}
+            json.dump(dct, f, indent=4)
 
 
 if __name__ == '__main__':
