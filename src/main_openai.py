@@ -3,15 +3,14 @@ import re
 import json
 import openai
 from openai import OpenAI
-import inspect
 from PIL import Image
 from time import perf_counter
 from dotenv import load_dotenv
 
 from config import config
 from logger import logger
-from utils import extract_text_with_fitz, switch_to_latin
-from utils import base64_encode_image, base64_encode_pil
+from utils import switch_to_latin, base64_encode_pil
+
 
 start = perf_counter()
 load_dotenv()
@@ -25,6 +24,9 @@ def certificate_local_postprocessing(response, connection):
     dct['Номера сделок'] = []
     dct['Номера таможенных сделок'] = []
     dct['Номера фсс'] = '%None%'
+
+    if dct['Тип документа'] == 'акт' and not re.fullmatch(r'\d{15}', dct['Номер документа'].strip()):
+        print(f"! act number {dct['Номер документа']} is not valid !")
 
     if len(dct['Номер коносамента']) < 5:
         dct['Номер коносамента'] = ''
