@@ -7,7 +7,9 @@ from glob import glob
 from pdf2image import convert_from_path
 
 from config import config
-from utils import delete_all_files, image_split_top_bot, get_unique_filename, is_scanned_pdf, count_pages
+from document_classifier import text_classifier
+from utils import extract_text_with_fitz, is_scanned_pdf, extract_pages
+from utils import delete_all_files, image_split_top_bot, get_unique_filename
 
 
 def image_preprocessor() -> None:
@@ -32,21 +34,20 @@ def image_preprocessor() -> None:
         folder_path = f'{os.path.join(edit_folder, clear_name)}({ext.replace(".", "")})'
         os.makedirs(folder_path, exist_ok=False)
         save_path = os.path.join(folder_path, os.path.basename(file))
-        with open(os.path.join(folder_path, 'main_file.txt'), 'w', encoding='utf-8') as f:
-            f.write(file)
 
+        file_params: list = list()
         # _____ pdf _____
-        if ext == '.pdf':
-            num_pages = count_pages(file)
+        if ext.lower() == '.pdf':
             scanned = is_scanned_pdf(file)
 
             # ___ pdf scanned ___
             if scanned:
+                file_params.append('scanned')
                 images = convert_from_path(file, first_page=1, last_page=1, fmt='jpg',
                                            poppler_path=config["POPPLER_PATH"],
                                            jpegopt={"quality": 100})
 
-                # take the first page to classify it using GPT
+                # take the first page (top half) to classify it using GPT
                 first_page = np.array(images[0])
                 first_page_top, _ = image_split_top_bot(first_page)
                 save_path = os.path.splitext(save_path)[0] + '.jpg'
@@ -54,40 +55,25 @@ def image_preprocessor() -> None:
 
             # ___ pdf digital ___
             else:
-                shutil.copy(file, save_path)
+                file_params.append('digital')
+                first_page_text = extract_text_with_fitz(file, pages=[1])
+                pdf_class = text_classifier(first_page_text)
+                if pdf_class == 'conos':
+                    extract_pages(file, pages_to_keep=[1], output_pdf_path=save_path)
+                else:
+                    shutil.copy(file, save_path)
+                file_params.append(pdf_class)
 
         # _____ images _____
         else:
+            file_params.append('image')
             top, _ = image_split_top_bot(file)
             top.save(save_path, quality=100)
 
-
-def folder_former(json_string: str, original_file: str, out_path: str) -> None:
-    dct = json.loads(json_string)
-    doc_type = dct['Тип документа']
-    doc_number = dct['Номер документа']
-    doc_conos = dct['Номер коносамента']
-    transactions = dct['Номера таможенных сделок']
-    if doc_type == 'act':
-        if not doc_number:
-            doc_number = 'untitled_number'
-        new_name = doc_number + os.path.splitext(original_file)[-1]
-    else:
-        if not doc_conos:
-            doc_conos = 'untitled_conos'
-        new_name = doc_conos + os.path.splitext(original_file)[-1]
-
-    if not transactions:
-        target_dir: str = config['untitled']
-        new_path = get_unique_filename(os.path.join(target_dir, new_name))
-        shutil.copy(original_file, new_path)
-    else:
-        for transaction in transactions:
-            target_dir = os.path.join(out_path, transaction)
-            if not os.path.isdir(target_dir):
-                os.makedirs(target_dir, exist_ok=False)
-            new_path = get_unique_filename(os.path.join(target_dir, new_name))
-            shutil.copy(original_file, new_path)
+        with open(os.path.join(folder_path, 'main_file.txt'), 'w', encoding='utf-8') as f:
+            f.write(file)
+            f.write('\n')
+            f.write('|'.join(file_params))
 
 
 if __name__ == '__main__':
