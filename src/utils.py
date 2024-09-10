@@ -115,15 +115,13 @@ def count_pages(file_path: str) -> int | None:
         return None
 
 
-def extract_text_with_fitz(pdf_data: str | bytes, pages: list[int] = None):
+def extract_text_with_fitz(pdf_data: str | bytes, pages: list[int] = None) -> str:
     # Проверяем, что за тип данных передан в pdf_data
     if isinstance(pdf_data, bytes):
         document = fitz.open("pdf", pdf_data)  # открываем PDF из bytes
     else:
         document = fitz.open(pdf_data)  # открываем PDF по пути
-
     text = ""
-
     # Если pages не указаны, извлекаем текст со всех страниц
     if pages is None:
         valid_pages_to_extract = list(range(1, document.page_count + 1))
@@ -135,14 +133,49 @@ def extract_text_with_fitz(pdf_data: str | bytes, pages: list[int] = None):
         page = document.load_page(page_num - 1)  # загружаем страницу по номеру
         text += page.get_text()  # извлекаем текст
 
+    if isinstance(pdf_data, str):
+        document.close()
+
     return text
 
 
-def extract_pages(input_pdf_path: str, pages_to_keep: list[int], output_pdf_path: str = None) -> Optional[bytes]:
-    """ Извлечение страниц из pdf. Если output_pdf_path не задан, возвращает байты """
+def clear_waste_pages(pdf_path: str) -> bytes:
+    """Удаляет лишние страницы и возвращает PDF в виде байтов."""
 
-    # Открываем исходный PDF файл
-    with open(input_pdf_path, "rb") as input_pdf_file:
+    reader = PyPDF2.PdfReader(pdf_path)
+    writer = PyPDF2.PdfWriter()
+    num_pages = len(reader.pages)
+
+    # Проверка текста на каждой странице
+    for page_num in range(num_pages):
+        page = reader.pages[page_num]
+        text = page.extract_text()
+
+        if len(text.strip()) > 8000:  # страница сплошного текста
+            pass
+        elif len(text.strip()) < 50:  # пустая страница или сканированная (нераспознаваемая)
+            pass
+        else:
+            writer.add_page(page)
+
+    # Записываем PDF в память
+    pdf_bytes = BytesIO()
+    writer.write(pdf_bytes)
+
+    # Возвращаем байты
+    return pdf_bytes.getvalue()
+
+
+def extract_pages(input_pdf: str | bytes, pages_to_keep: list[int], output_pdf_path: Optional[str] = None) -> Optional[bytes]:
+    """Извлечение страниц из PDF. Если output_pdf_path не задан, возвращает байты."""
+
+    # Проверяем, что было передано: путь к файлу или байты
+    if isinstance(input_pdf, bytes):
+        input_pdf_file = BytesIO(input_pdf)
+    else:
+        input_pdf_file = open(input_pdf, "rb")
+
+    try:
         reader = PyPDF2.PdfReader(input_pdf_file)
         writer = PyPDF2.PdfWriter()
         valid_pages = [x + 1 for x in range(len(reader.pages))]
@@ -164,6 +197,11 @@ def extract_pages(input_pdf_path: str, pages_to_keep: list[int], output_pdf_path
 
             # Возвращаем байты PDF-файла
             return output_buffer.getvalue()
+
+    finally:
+        # Закрываем файл, если он был открыт
+        if not isinstance(input_pdf, bytes):
+            input_pdf_file.close()
 
 
 def is_scanned_pdf(file_path, pages_to_analyse=None):
