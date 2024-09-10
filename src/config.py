@@ -13,14 +13,19 @@ config['user_1C'] = os.getenv('user_1C')
 config['password_1C'] = os.getenv('password_1C')
 config['V83_CONN_STRING'] = f"Srvr=kappa; Ref=CUP; Usr={config['user_1C']}; Pwd={config['password_1C']}"
 
-if getattr(sys, 'frozen', False):  # в сборке
-    config['BASE_DIR'] = os.path.dirname(sys.executable)
-    config['POPPLER_PATH'] = os.path.join(sys._MEIPASS, 'poppler')
-    config['magick_exe'] = os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
+if os.path.exists(path_file := os.path.join('..', 'paths.json')):
+    with open(path_file, 'r', encoding='utf-8') as file:
+        dct = json.load(file)
+        config['BASE_DIR'] = dct['BASE_DIR']
 else:
-    config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
-    config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
+    if getattr(sys, 'frozen', False):  # в сборке
+        config['BASE_DIR'] = os.path.dirname(sys.executable)
+        config['POPPLER_PATH'] = os.path.join(sys._MEIPASS, 'poppler')
+        config['magick_exe'] = os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
+    else:
+        config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
+        config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
 
 config['IN'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
@@ -116,7 +121,6 @@ APDX_JSON_SCHEMA = {
 }
 
 config['appendix_response_format'] = {"type": "json_schema", "json_schema": APDX_JSON_SCHEMA}
-
 
 if __name__ == '__main__':
     for k, v in config.items():
