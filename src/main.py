@@ -27,6 +27,8 @@ def main(connection: None):
     in_folder, edit_folder, out_folder = config['IN'], config['EDITED'], config['OUT']
 
     folders = sorted([file for file in glob(f"{edit_folder}/*") if os.path.isdir(file)], key=os.path.getctime)
+    if not folders:
+        return 'EMPTY'
 
     # _____ GO THROUGH THE EDITED FOLDERS _____
     for folder in folders:
@@ -120,14 +122,18 @@ def main_loop(sleep_time: int, single_launch: bool, disconnected: bool):
 
         start = perf_counter()
 
+        result = None
         try:
-            main(connection=connection)
+            result = main(connection=connection)
         except PermissionDeniedError:
             logger.print('ОШИБКА ВЫПОЛНЕНИЯ:\n!!! Включите VPN !!!')
 
-        os.makedirs(os.path.join(config['OUT'], '__logs__'), exist_ok=True)
-        logger.save(os.path.join(config['OUT'], '__logs__'))
-        logger.clear()
+        if result == 'EMPTY':
+            logger.clear()
+        else:
+            os.makedirs(os.path.join(config['OUT'], '__logs__'), exist_ok=True)
+            logger.save(os.path.join(config['OUT'], '__logs__'))
+            logger.clear()
 
         print(f"{time.perf_counter() - start:.2f}")
 
