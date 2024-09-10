@@ -101,7 +101,8 @@ def main(connection: None):
             # _____  DELETE ORIGINAL FILE FROM "IN" _____
 
             os.unlink(original_file)
-
+        except PermissionDeniedError:
+            raise
         except Exception:
             logger.print('main_error', traceback.format_exc())
 
