@@ -153,7 +153,7 @@ def clear_waste_pages(pdf_path: str) -> bytes:
 
         if len(text.strip()) > 8000:  # страница сплошного текста
             pass
-        elif len(text.strip()) < 50:  # пустая страница или сканированная (нераспознаваемая)
+        elif len(text.strip()) < 75:  # пустая страница или сканированная (нераспознаваемая)
             pass
         else:
             writer.add_page(page)

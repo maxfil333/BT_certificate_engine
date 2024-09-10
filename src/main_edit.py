@@ -1,6 +1,5 @@
 import os
 import json
-import shutil
 
 import numpy as np
 from glob import glob
@@ -8,8 +7,8 @@ from pdf2image import convert_from_path
 
 from config import config
 from document_classifier import text_classifier
-from utils import extract_text_with_fitz, is_scanned_pdf, extract_pages
-from utils import delete_all_files, image_split_top_bot, get_unique_filename
+from utils import extract_text_with_fitz, is_scanned_pdf, extract_pages, clear_waste_pages
+from utils import delete_all_files, image_split_top_bot
 
 
 def image_preprocessor() -> None:
@@ -61,7 +60,8 @@ def image_preprocessor() -> None:
                 if pdf_class == 'conos':
                     extract_pages(file, pages_to_keep=[1], output_pdf_path=save_path)
                 else:
-                    shutil.copy(file, save_path)
+                    cleared = clear_waste_pages(file)
+                    extract_pages(cleared, pages_to_keep=[1, 2, 3], output_pdf_path=save_path)  # max_pages to model = 3
                 file_params.append(pdf_class)
 
         # _____ images _____

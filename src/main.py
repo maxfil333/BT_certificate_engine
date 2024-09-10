@@ -47,11 +47,8 @@ def main(connection: bool):
             original_file_num_pages = 0
 
         # __________ RUN CHAT __________
-        # TODO: check assistant vs chat
         if file_type.lower() == '.pdf':
-            text_mode_content = extract_text_with_fitz(
-                extract_pages(file, pages_to_keep=[1, 2, 3])  # max_pages to model = 3
-            )
+            text_mode_content = extract_text_with_fitz(file)
         else:
             text_mode_content = None
 
