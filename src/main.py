@@ -11,7 +11,7 @@ from openai import PermissionDeniedError
 from config import config
 from main_edit import image_preprocessor
 from main_openai import run_chat, certificate_local_postprocessing, appendix_local_postprocessing
-from utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former
+from utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former, extract_pages
 
 
 def main(connection: bool):
@@ -49,7 +49,9 @@ def main(connection: bool):
         # __________ RUN CHAT __________
         # TODO: check assistant vs chat
         if file_type.lower() == '.pdf':
-            text_mode_content = extract_text_with_fitz(file)
+            text_mode_content = extract_text_with_fitz(
+                extract_pages(file, pages_to_keep=[1, 2, 3])  # max_pages to model = 3
+            )
         else:
             text_mode_content = None
 
