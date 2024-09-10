@@ -26,7 +26,7 @@ def certificate_local_postprocessing(response, connection):
     dct['Номера фсс'] = '%None%'
 
     if dct['Тип документа'] == 'акт' and not re.fullmatch(r'\d{15}', dct['Номер документа'].strip()):
-        print(f"! act number {dct['Номер документа']} is not valid !")
+        logger.print(f"! act number {dct['Номер документа']} is not valid !")
 
     if len(dct['Номер коносамента']) < 5:
         dct['Номер коносамента'] = ''

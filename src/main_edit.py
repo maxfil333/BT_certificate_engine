@@ -5,6 +5,7 @@ import numpy as np
 from glob import glob
 from pdf2image import convert_from_path
 
+from logger import logger
 from config import config
 from document_classifier import text_classifier
 from utils import extract_text_with_fitz, is_scanned_pdf, extract_pages, clear_waste_pages
@@ -14,11 +15,11 @@ from utils import delete_all_files, image_split_top_bot
 def image_preprocessor() -> None:
     """ preprocess and copy images from IN to EDITED """
 
-    print('main_edit.image_preprocessor...')
+    logger.print('main_edit.image_preprocessor...')
     in_folder, edit_folder = config['IN'], config['EDITED']
 
     # ___ clear edited folder ___
-    print('clearing EDITED...')
+    logger.print('clearing EDITED...')
     delete_all_files(edit_folder)
 
     # ___ collect files in IN-folder ___
@@ -27,7 +28,7 @@ def image_preprocessor() -> None:
 
     # ___ create folder in EDITED-folder for each file ___
     for file in sorted(files, key=os.path.getctime):
-        print(file)
+        logger.print(file)
         base, ext = os.path.splitext(file)
         clear_name = os.path.splitext(os.path.split(file)[-1])[0]
         folder_path = f'{os.path.join(edit_folder, clear_name)}({ext.replace(".", "")})'

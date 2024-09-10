@@ -1,6 +1,8 @@
 import re
 from typing import Literal, Optional
 
+from logger import logger
+
 
 def text_classifier(text: str) -> Optional[Literal['conos', 'pi', 'report']]:
     """ takes text: str, returns 'class_name' or None """
@@ -23,7 +25,7 @@ def text_classifier(text: str) -> Optional[Literal['conos', 'pi', 'report']]:
 
     conos_matches = re.findall(conos_regex, text, flags=re.IGNORECASE)
     if conos_matches:
-        print('conos matches:', conos_matches)
+        logger.print('conos matches:', conos_matches)
         if len(set(conos_matches)) >= 3:  # уникальных ключевых слов >= 3
             return 'conos'
 

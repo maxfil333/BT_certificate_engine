@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 
 
@@ -18,9 +19,13 @@ class Logger:
 
     def save(self, log_folder):
         # Записываем логи в файл
-        log_file = os.path.join(log_folder, 'log.log')
+        log_name = f"log_{datetime.now().strftime('%d.%m.%Y_%H-%M-%S')}.log"
+        log_file = os.path.join(log_folder, log_name)
         with open(log_file, 'a', encoding='utf-8') as file:
             file.writelines(self.data)
+
+    def clear(self):
+        self.data = []
 
 
 logger = Logger()
