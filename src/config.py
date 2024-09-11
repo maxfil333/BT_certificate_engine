@@ -18,7 +18,7 @@ PATHS_JSON = os.path.abspath(os.path.join('..', 'paths.json')) \
 
 if os.path.exists(PATHS_JSON):
     print(f"paths.json was found in: {PATHS_JSON}")
-    with open(PATHS_JSON, 'r', encoding='utf-8') as file:
+    with open(PATHS_JSON, 'r', encoding='utf-8-sig') as file:
         config['BASE_DIR'] = json.load(file)['BASE_DIR']
 else:
     if getattr(sys, 'frozen', False):  # в сборке
