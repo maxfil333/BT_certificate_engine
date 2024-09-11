@@ -43,6 +43,7 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
 
     # ___ distribute into folders ___
     if not transactions:
+        os.makedirs(config['untitled'], exist_ok=True)
         target_dir: str = config['untitled']
         new_path = get_unique_filename(os.path.join(target_dir, new_name))
         shutil.copy(original_file, new_path)

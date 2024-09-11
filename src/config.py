@@ -30,7 +30,6 @@ config['IN'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
 config['OUT'] = os.path.join(config['BASE_DIR'], 'OUT')
 config['untitled'] = os.path.join(config['OUT'], '0_Нераспознанные')
-os.makedirs(config['untitled'], exist_ok=True)
 print(f"IN: {config['IN']}\nEDITED: {config['EDITED']}\nOUT: {config['OUT']}")
 
 # ___________________________ poppler | magick ___________________________
