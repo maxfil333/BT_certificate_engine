@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 config = dict()
 
+# ___________________________ 1C | COM ___________________________
 config['user_1C'] = os.getenv('user_1C')
 config['password_1C'] = os.getenv('password_1C')
 config['V83_CONN_STRING'] = f"Srvr=kappa; Ref=CUP; Usr={config['user_1C']}; Pwd={config['password_1C']}"
@@ -22,23 +23,26 @@ if os.path.exists(PATHS_JSON):
 else:
     if getattr(sys, 'frozen', False):  # в сборке
         config['BASE_DIR'] = os.path.dirname(sys.executable)
-        config['POPPLER_PATH'] = os.path.join(sys._MEIPASS, 'poppler')
-        config['magick_exe'] = os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
     else:
         config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        config['POPPLER_PATH'] = r'C:\Program Files\poppler-24.07.0\Library\bin'
-        config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
 
 config['IN'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
 config['OUT'] = os.path.join(config['BASE_DIR'], 'OUT')
 config['untitled'] = os.path.join(config['OUT'], '0_Нераспознанные')
 os.makedirs(config['untitled'], exist_ok=True)
-
 print(f"IN: {config['IN']}\nEDITED: {config['EDITED']}\nOUT: {config['OUT']}")
 
+# ___________________________ poppler | magick ___________________________
+if getattr(sys, 'frozen', False):  # в сборке
+    config['POPPLER_PATH'] = os.path.join(sys._MEIPASS, 'poppler')
+    config['magick_exe'] = os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
+else:
+    config['POPPLER_PATH'] = r'C:\Program Files\poppler-24.07.0\Library\bin'
+    config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
+
+# ___________________________ GPT | PROMPTS | PARAMS ___________________________
 config['GPTMODEL'] = 'gpt-4o-2024-08-06'
-config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
 
 config['certificate_system_prompt'] = f"""
 Ты бот, анализирующий документы (фитосанитарный контроль грузов, перевозимых по морю).
