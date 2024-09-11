@@ -1,14 +1,14 @@
 import os
 import re
-import shutil
-from glob import glob
-from tqdm import tqdm
 import random
+import shutil
 import numpy as np
 from PIL import Image
+from glob import glob
+from tqdm import tqdm
 from pdf2image import convert_from_path
 
-from config import config
+from src.config import config
 
 
 class BreakException(Exception):

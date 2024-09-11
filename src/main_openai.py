@@ -2,14 +2,14 @@ import os
 import re
 import json
 import openai
-from openai import OpenAI
 from PIL import Image
+from openai import OpenAI
 from time import perf_counter
 from dotenv import load_dotenv
 
-from config import config
-from logger import logger
-from utils import switch_to_latin, base64_encode_pil
+from src.config import config
+from src.logger import logger
+from src.utils import switch_to_latin, base64_encode_pil
 
 
 start = perf_counter()

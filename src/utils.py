@@ -10,8 +10,8 @@ from PIL import Image
 from io import BytesIO
 from typing import Optional
 
-from logger import logger
-from config import config
+from src.logger import logger
+from src.config import config
 
 
 # _____ FOLDERS _____

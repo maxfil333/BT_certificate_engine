@@ -11,12 +11,12 @@ from time import perf_counter
 from pdf2image import convert_from_path
 from openai import PermissionDeniedError
 
-from logger import logger
-from config import config
-from connector import create_connection
-from main_edit import image_preprocessor
-from main_openai import run_chat, certificate_local_postprocessing, appendix_local_postprocessing
-from utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former, extract_pages
+from src.logger import logger
+from src.config import config
+from src.connector import create_connection
+from src.main_edit import image_preprocessor
+from src.utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former
+from src.main_openai import run_chat, certificate_local_postprocessing, appendix_local_postprocessing
 
 
 def main(connection: None):

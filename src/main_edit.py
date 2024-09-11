@@ -5,11 +5,11 @@ import numpy as np
 from glob import glob
 from pdf2image import convert_from_path
 
-from logger import logger
-from config import config
-from document_classifier import text_classifier
-from utils import extract_text_with_fitz, is_scanned_pdf, extract_pages, clear_waste_pages
-from utils import delete_all_files, image_split_top_bot
+from src.logger import logger
+from src.config import config
+from src.document_classifier import text_classifier
+from src.utils import delete_all_files, image_split_top_bot
+from src.utils import extract_text_with_fitz, is_scanned_pdf, extract_pages, clear_waste_pages
 
 
 def image_preprocessor() -> None:

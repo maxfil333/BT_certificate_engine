@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from logger import logger
+from src.logger import logger
 
 
 def is_horizontal(line):

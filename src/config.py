@@ -1,22 +1,24 @@
 import os
 import sys
 import json
-import msvcrt
-from glob import glob
 from dotenv import load_dotenv
 
-load_dotenv()
 
+load_dotenv()
 config = dict()
 
 config['user_1C'] = os.getenv('user_1C')
 config['password_1C'] = os.getenv('password_1C')
 config['V83_CONN_STRING'] = f"Srvr=kappa; Ref=CUP; Usr={config['user_1C']}; Pwd={config['password_1C']}"
 
-if os.path.exists(path_file := os.path.join('..', 'paths.json')):
-    with open(path_file, 'r', encoding='utf-8') as file:
-        dct = json.load(file)
-        config['BASE_DIR'] = dct['BASE_DIR']
+# ___________________________ BASE DIR ___________________________
+PATHS_JSON = os.path.abspath(os.path.join('..', 'paths.json')) \
+    if __name__ == '__main__' else os.path.abspath('paths.json')
+
+if os.path.exists(PATHS_JSON):
+    print(f"paths.json was found in: {PATHS_JSON}")
+    with open(PATHS_JSON, 'r', encoding='utf-8') as file:
+        config['BASE_DIR'] = json.load(file)['BASE_DIR']
 else:
     if getattr(sys, 'frozen', False):  # в сборке
         config['BASE_DIR'] = os.path.dirname(sys.executable)

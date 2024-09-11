@@ -1,7 +1,7 @@
 import re
 from typing import Literal, Optional
 
-from logger import logger
+from src.logger import logger
 
 
 def text_classifier(text: str) -> Optional[Literal['conos', 'pi', 'report']]:

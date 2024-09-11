@@ -1,6 +1,7 @@
 import time
 import win32com.client
-from logger import logger
+
+from src.logger import logger
 
 
 def create_connection(connection_params):
