@@ -1,3 +1,8 @@
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
+
 import os
 import json
 import time
@@ -110,11 +115,12 @@ def main(connection: None):
 
 
 def main_loop(sleep_time: int, single_launch: bool, disconnected: bool):
-    iteration = 1
     if disconnected:
         connection = None
     else:
         connection = create_connection(config['V83_CONN_STRING'])
+
+    iteration = 1
     while True:
         print()
         print(f"{'-' * 24} ITERATION - {iteration} {'-' * 24}")
