@@ -1,7 +1,5 @@
 @echo off
 
-cd /d "%~dp0"
-
 REM Проверка наличия папки .venv
 if exist .venv (
     call .venv\Scripts\activate
@@ -9,4 +7,4 @@ if exist .venv (
     call venv\Scripts\activate
 )
 
-python main.py >> script_log.txt 2>&1
+python main.py
