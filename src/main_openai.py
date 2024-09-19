@@ -9,8 +9,7 @@ from dotenv import load_dotenv
 
 from src.config import config
 from src.logger import logger
-from src.utils import switch_to_latin, base64_encode_pil
-
+from src.utils import switch_to_latin, base64_encode_pil, try_exec
 
 start = perf_counter()
 load_dotenv()
@@ -33,8 +32,10 @@ def certificate_local_postprocessing(response, connection):
 
     if connection and dct['Номер коносамента']:
         conos_id = dct['Номер коносамента']
-        trans_number = connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading(conos_id)
-        customs_trans = connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading(conos_id)
+        trans_number = try_exec(connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading,
+                                conos_id)
+        customs_trans = try_exec(connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading,
+                                 conos_id)
         dct['Номера сделок'] = [x.strip() for x in trans_number.strip("|").split("|") if x.strip()]
         dct['Номера таможенных сделок'] = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
 
@@ -57,11 +58,13 @@ def appendix_local_postprocessing(response, connection):
         for number in fcc_numbers:
             if True:  # try in english
                 number_en = switch_to_latin(number)
-                customs_trans = connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument(
+                customs_trans = try_exec(
+                    connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
                     number_en)
             if not customs_trans:  # then try in russian
                 number_ru = switch_to_latin(number, reverse=True)
-                customs_trans = connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument(
+                customs_trans = try_exec(
+                    connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
                     number_ru)
             if customs_trans:  # if some result
                 customs_trans = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]

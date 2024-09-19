@@ -5,6 +5,7 @@ import json
 import base64
 import shutil
 import PyPDF2
+import traceback
 import numpy as np
 from PIL import Image
 from io import BytesIO
@@ -269,6 +270,16 @@ def image_split_top_bot(image: str | np.ndarray, top_y_shift=0) -> tuple[Image.I
     bot = pil_image.crop((0, pil_image.height // 2,
                           pil_image.width, pil_image.height))
     return top, bot
+
+
+# _________ SERVICES _________
+
+def try_exec(function, *args, return_when_fails=''):
+    try:
+        return function(*args)
+    except Exception:
+        logger.print(traceback.format_exc())
+        return return_when_fails
 
 
 if __name__ == '__main__':
