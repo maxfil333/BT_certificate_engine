@@ -16,6 +16,7 @@ from src.config import config
 
 
 # _____ FOLDERS _____
+# TODO: 123
 
 def delete_all_files(dir_path: str):
     for folder_ in os.scandir(dir_path):
