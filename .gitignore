@@ -1,5 +1,6 @@
 __*/
 __*
+!__init__.py
 data*/
 crypto.key
 *.exe
