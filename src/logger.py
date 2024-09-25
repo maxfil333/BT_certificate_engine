@@ -17,6 +17,9 @@ class Logger:
         # Сохраняем сообщение в data
         self.data.append(message)
 
+    def write(self, string_):
+        self.data.append(string_ + '\n')
+
     def save(self, log_folder):
         # Записываем логи в файл
         log_name = f"log_{datetime.now().strftime('%d.%m.%Y_%H-%M-%S')}.log"
