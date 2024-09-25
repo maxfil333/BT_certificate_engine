@@ -1,8 +1,3 @@
-import sys
-sys.stdout.reconfigure(encoding='utf-8')
-sys.stdin.reconfigure(encoding='utf-8')
-sys.stderr.reconfigure(encoding='utf-8')
-
 import os
 import json
 import time
@@ -22,6 +17,11 @@ from src.connector import create_connection
 from src.main_edit import image_preprocessor
 from src.utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former
 from src.main_openai import run_chat, certificate_local_postprocessing, appendix_local_postprocessing
+
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 
 
 def main(connection: None):
@@ -102,12 +102,11 @@ def main(connection: None):
                 logger.print('merged result', result)
 
             # _____  COPY ORIGINAL FILE TO "OUT" _____
-
-            folder_former(json_string=result, original_file=original_file, out_path=config['OUT'])
+            folder_former(json_string=result, original_file=original_file, out_path=out_folder)
 
             # _____  DELETE ORIGINAL FILE FROM "IN" _____
-
             os.unlink(original_file)
+
         except PermissionDeniedError:
             raise
         except Exception:
