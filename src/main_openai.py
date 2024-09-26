@@ -6,10 +6,13 @@ from PIL import Image
 from openai import OpenAI
 from time import perf_counter
 from dotenv import load_dotenv
+from typing import Union, Literal
+from win32com.client import CDispatch
 
-from src.config import config
 from src.logger import logger
+from src.config import config
 from src.utils import switch_to_latin, base64_encode_pil, try_exec
+from src.http_connector import cup_http_request
 
 start = perf_counter()
 load_dotenv()
@@ -18,7 +21,7 @@ ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
 client = OpenAI()
 
 
-def certificate_local_postprocessing(response, connection):
+def main_local_postprocessing(response, connection: Union[None, Literal['http'], CDispatch]):
     dct = json.loads(response)
     dct['Номера сделок'] = []
     dct['Номера таможенных сделок'] = []
@@ -32,17 +35,24 @@ def certificate_local_postprocessing(response, connection):
 
     if connection and dct['Номер коносамента']:
         conos_id = dct['Номер коносамента']
-        trans_number = try_exec(connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading,
-                                conos_id)
-        customs_trans = try_exec(connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading,
-                                 conos_id)
-        dct['Номера сделок'] = [x.strip() for x in trans_number.strip("|").split("|") if x.strip()]
-        dct['Номера таможенных сделок'] = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
+        if connection == 'http':
+            trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', conos_id)
+            customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', conos_id)
+        else:
+            trans_number = try_exec(connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading,
+                                    conos_id)
+            customs_trans = try_exec(connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading,
+                                     conos_id)
+            trans_number = [x.strip() for x in trans_number.strip("|").split("|") if x.strip()]
+            customs_trans = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
+
+        dct['Номера сделок'] = trans_number
+        dct['Номера таможенных сделок'] = customs_trans
 
     return json.dumps(dct, ensure_ascii=False, indent=4)
 
 
-def appendix_local_postprocessing(response, connection):
+def appendix_local_postprocessing(response, connection: Union[None, Literal['http'], CDispatch]):
     dct = json.loads(response)
     dct['result'] = {'fcc_numbers': None, "transaction_numbers": None}
     fcc_numbers = []
@@ -58,16 +68,26 @@ def appendix_local_postprocessing(response, connection):
         for number in fcc_numbers:
             if True:  # try in english
                 number_en = switch_to_latin(number)
-                customs_trans = try_exec(
-                    connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
-                    number_en)
+                if connection == 'http':
+                    customs_trans = cup_http_request(r'CustomsTransactionNumberFromBrokerDocument', number_en)
+                else:
+                    customs_trans = try_exec(
+                        connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
+                        number_en)
             if not customs_trans:  # then try in russian
                 number_ru = switch_to_latin(number, reverse=True)
-                customs_trans = try_exec(
-                    connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
-                    number_ru)
+                if connection == 'http':
+                    customs_trans = cup_http_request(r'CustomsTransactionNumberFromBrokerDocument', number_ru)
+                else:
+                    customs_trans = try_exec(
+                        connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
+                        number_ru)
+
             if customs_trans:  # if some result
-                customs_trans = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
+                if connection == 'http':
+                    pass
+                else:
+                    customs_trans = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
                 tr_numbers.extend(customs_trans)
 
         dct['result']['transaction_numbers'] = list(set(tr_numbers))
@@ -85,7 +105,7 @@ def run_chat(*img_paths: str, prompt, response_format, detail='high', text_mode_
     :param text_mode_content: if not None, text_content for messages.user.content
     :return: json-string
     """
-
+    start = perf_counter()
     if text_mode_content:
         content = text_mode_content
     else:

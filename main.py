@@ -5,6 +5,8 @@ import datetime
 import argparse
 import traceback
 import numpy as np
+from typing import Union, Literal
+from win32com.client import CDispatch
 
 from glob import glob
 from time import perf_counter
@@ -13,14 +15,14 @@ from openai import PermissionDeniedError
 
 from src.logger import logger
 from src.config import config
-from src.connector import create_connection
+from src.com_connector import create_connection
 from src.main_edit import image_preprocessor
+from src.main_openai import run_chat, main_local_postprocessing, appendix_local_postprocessing
 from src.utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former
-from src.main_openai import run_chat, certificate_local_postprocessing, appendix_local_postprocessing
 
 
-def main(connection: None):
-    logger.print(f"CONNECTION: <{'true' if connection else 'false'}>")
+def main(connection: Union[None, Literal['http'], CDispatch]):
+    logger.print(f"CONNECTION: <{connection}>")
 
     # _____ PREPROCESSING FROM IN TO EDITED _____
     image_preprocessor()
@@ -62,9 +64,9 @@ def main(connection: None):
                               text_mode_content=text_mode_content
                               )
             logger.print('result_cert:', result, sep='\n')
-            result = certificate_local_postprocessing(response=result, connection=connection)
+            result = main_local_postprocessing(response=result, connection=connection)
             result_dct = json.loads(result)
-            logger.print('after local postprocessing:', result)
+            logger.print('main_local_postprocessing result:', result)
 
             # ___ если АКТ, то ищем в приложении ___
             if (connection and result_dct['Тип документа'] == 'акт' and (not result_dct['Номера таможенных сделок'])
@@ -85,7 +87,7 @@ def main(connection: None):
                                            )
                 logger.print('result_apdx:', result_appendix, sep='\n')
                 result_appendix = appendix_local_postprocessing(response=result_appendix, connection=connection)
-                logger.print('after local postprocessing:', result_appendix)
+                logger.print('appendix_local_postprocessing result:', result_appendix)
 
                 # ___ добавляем найденное в result ___
                 dct, dct_appendix = json.loads(result), json.loads(result_appendix)
@@ -108,11 +110,16 @@ def main(connection: None):
             logger.print('main_error', traceback.format_exc())
 
 
-def main_loop(sleep_time: int, single_launch: bool, disconnected: bool):
-    if disconnected:
-        connection = None
+def main_loop(sleep_time: int, single_launch: bool, use_com_connector: bool, ignore_connection: bool):
+
+    # _______ CONNECTION ________
+    if ignore_connection is False:
+        if use_com_connector:
+            connection = create_connection()
+        else:
+            connection = 'http'
     else:
-        connection = create_connection(config['V83_CONN_STRING'])
+        connection = None
 
     iteration = 1
     while True:
@@ -135,7 +142,7 @@ def main_loop(sleep_time: int, single_launch: bool, disconnected: bool):
             logger.save(os.path.join(config['OUT'], '__logs__'))
             logger.clear()
 
-        print(f"{time.perf_counter() - start:.2f}")
+        print(f"ITERATION TIME: {perf_counter() - start:.2f}")
 
         print()
         print(f"{'-' * 20} ITERATION - {iteration} COMPLETED {'-' * 20}")
@@ -154,13 +161,15 @@ if __name__ == '__main__':
     DEFAULT_SLEEP_TIME = 20
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-st', '--sleep_time', type=int, help='time between launches')
-    parser.add_argument('-sl', '--single_launch', action='store_true', help='run only once')
-    parser.add_argument('-d', '--disconnected', action='store_true', help='run without 1C connector')
+    parser.add_argument('-st',  '--sleep_time',        type=int,            help='time between launches')
+    parser.add_argument('-sl',  '--single_launch',     action='store_true', help='run only once')
+    parser.add_argument('-ucc', '--use_com_connector', action='store_true', help='use com connector')
+    parser.add_argument('-ic',  '--ignore_connection', action='store_true', help='run without 1C connection')
     args = parser.parse_args()
 
     main_loop(
         sleep_time=args.sleep_time if args.sleep_time is not None else DEFAULT_SLEEP_TIME,
         single_launch=args.single_launch,
-        disconnected=args.disconnected
+        use_com_connector=args.use_com_connector,
+        ignore_connection=args.ignore_connection
     )
