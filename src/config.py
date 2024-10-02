@@ -17,7 +17,7 @@ PATHS_JSON = os.path.abspath(os.path.join('..', 'paths.json')) \
     if __name__ == '__main__' else os.path.abspath('paths.json')
 
 if os.path.exists(PATHS_JSON):
-    print(f"paths.json was found in: {PATHS_JSON}")
+    print(f"\"paths.json\" was found in: {PATHS_JSON}")
     with open(PATHS_JSON, 'r', encoding='utf-8-sig') as file:
         config['BASE_DIR'] = json.load(file)['BASE_DIR']
 else:
@@ -25,6 +25,7 @@ else:
         config['BASE_DIR'] = os.path.dirname(sys.executable)
     else:
         config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    print(f"No \"paths.json\" was found.\nBASE DIR = {config['BASE_DIR']}\n")
 
 config['IN'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
