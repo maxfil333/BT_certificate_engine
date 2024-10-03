@@ -94,6 +94,14 @@ def appendix_local_postprocessing(response, connection: Union[None, Literal['htt
     return json.dumps(dct, ensure_ascii=False, indent=4)
 
 
+def get_consignee_and_feeder(response: str, connection: Union[None, Literal['http'], CDispatch]):
+    """
+    :param response:   json formatted string
+    :param connection: connection type
+    """
+    pass
+
+
 # ___________________________ CHAT ___________________________
 
 def run_chat(*img_paths: str, prompt, response_format, detail='high', text_mode_content: str | None = None) -> str:
@@ -131,6 +139,7 @@ def run_chat(*img_paths: str, prompt, response_format, detail='high', text_mode_
     logger.print('chat model:', response.model)
     logger.print(f'time: {perf_counter() - start:.2f}')
     logger.print(f'completion_tokens: {response.usage.completion_tokens}')
+    logger.print(f'cached_tokens: {response.usage.prompt_tokens_details}')
     logger.print(f'prompt_tokens: {response.usage.prompt_tokens}')
     logger.print(f'total_tokens: {response.usage.total_tokens}')
 
