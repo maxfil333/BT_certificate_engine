@@ -1,14 +1,15 @@
-import os
 import base64
+
 import requests
 from requests.auth import HTTPBasicAuth
+from typing import Union
 
 from src.logger import logger
 from src.config import config
 
 
 # ______ HTTP-request ______
-def cup_http_request(function, *args, kappa=True):
+def cup_http_request(function, *args, kappa=True) -> Union[list, dict, None]:
     user_1C = config['user_1C']
     password_1C = config['password_1C']
 
@@ -61,5 +62,8 @@ if __name__ == '__main__':
     func_name = r'UnitDataByTransactionNumber'
     a1 = r'ТБ-0109677'
     a2 = r'СудноФидер,Грузополучатель'
+    print(cup_http_request(func_name, a1, a2))  # -> dict
 
-    print(cup_http_request(func_name, a1, a2))
+    func_name = r'CustomsTransactionNumberFromBrokerDocument'
+    a1 = r'000055211/24'
+    print(cup_http_request(func_name, a1))  # -> list
