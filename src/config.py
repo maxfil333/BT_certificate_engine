@@ -2,10 +2,17 @@ import os
 import sys
 import json
 from dotenv import load_dotenv
+from aiogram import Bot
+from aiogram.client.default import DefaultBotProperties
 
 
 load_dotenv()
 config = dict()
+
+if getattr(sys, 'frozen', False):  # в сборке
+    config['PROJECT_DIR'] = os.path.dirname(sys.executable)
+else:
+    config['PROJECT_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ___________________________ 1C | COM ___________________________
 config['user_1C'] = os.getenv('user_1C')
@@ -13,25 +20,29 @@ config['password_1C'] = os.getenv('password_1C')
 config['V83_CONN_STRING'] = f"Srvr=kappa; Ref=CUP; Usr={config['user_1C']}; Pwd={config['password_1C']}"
 
 # ___________________________ BASE DIR ___________________________
-PATHS_JSON = os.path.abspath(os.path.join('..', 'paths.json')) \
-    if __name__ == '__main__' else os.path.abspath('paths.json')
+DEBUG_JSON = os.path.join(config['PROJECT_DIR'], 'DEBUG.json')
 
-if os.path.exists(PATHS_JSON):
-    print(f"\"paths.json\" was found in: {PATHS_JSON}")
-    with open(PATHS_JSON, 'r', encoding='utf-8-sig') as file:
+if os.path.exists(DEBUG_JSON):  # TEST
+    with open(DEBUG_JSON, 'r', encoding='utf-8-sig') as file:
         config['BASE_DIR'] = json.load(file)['BASE_DIR']
-else:
-    if getattr(sys, 'frozen', False):  # в сборке
-        config['BASE_DIR'] = os.path.dirname(sys.executable)
-    else:
-        config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    print(f"No \"paths.json\" was found.\nBASE DIR = {config['BASE_DIR']}\n")
+    config['TOKEN'] = os.getenv('TEST_TOKEN')
+    config['channel_id'] = os.getenv('test_channel_id')
+    print(f"\"DEBUG.json\" was found in: {DEBUG_JSON}.\nBASE DIR = {config['BASE_DIR']}\n")
+
+else:  # PROD
+    config['BASE_DIR'] = r"\\10.10.0.3\Docs\CUSTOM\0 Документы с Районов"
+    config['TOKEN'] = os.getenv('TOKEN')
+    config['channel_id'] = os.getenv('channel_id')
+    print(f"No \"DEBUG.json\" was found.\nBASE DIR = {config['BASE_DIR']}\n")
 
 config['IN'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
 config['OUT'] = os.path.join(config['BASE_DIR'], 'OUT')
 config['untitled'] = os.path.join(config['OUT'], '0_Нераспознанные')
 print(f"IN: {config['IN']}\nEDITED: {config['EDITED']}\nOUT: {config['OUT']}")
+
+# __________ BOT PARAMETERS __________
+config['bot'] = Bot(token=config['TOKEN'], default=DefaultBotProperties(parse_mode='HTML'))
 
 # ___________________________ poppler | magick ___________________________
 if getattr(sys, 'frozen', False):  # в сборке
