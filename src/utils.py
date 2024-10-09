@@ -5,11 +5,14 @@ import json
 import base64
 import shutil
 import PyPDF2
+import asyncio
 import traceback
 import numpy as np
 from PIL import Image
 from io import BytesIO
+from aiogram import Bot
 from typing import Optional
+
 
 from src.logger import logger
 from src.config import config
@@ -25,6 +28,14 @@ def delete_all_files(dir_path: str):
             os.remove(folder_.path)
 
 
+def bot_send_message_to_channel(bot: Bot, message: str, channel_id: str):
+    async def send_message_to_channel(channel_id: int | str, message: str):
+        await bot.send_message(chat_id=channel_id, text=message)
+        await bot.session.close()
+
+    asyncio.run(send_message_to_channel(channel_id, message))
+
+
 def folder_former(json_string: str, original_file: str, out_path: str) -> None:
     # ___ generate document name ___
     dct = json.loads(json_string)
@@ -32,7 +43,8 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
     doc_number = dct['Номер документа']
     doc_conos = dct['Номер коносамента']
     transactions = dct['Номера таможенных сделок']
-    cdf = dct['consignee_deal_feeder_short']
+    cdf = dct['consignee_deal_feeder']
+    cdf_short = dct['consignee_deal_feeder_short']
 
     if doc_type == 'коносамент':
         if not doc_conos:
@@ -50,13 +62,15 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
         target_dir: str = config['untitled']
         new_path = get_unique_filename(os.path.join(target_dir, new_name))
         shutil.copy(original_file, new_path)
+        bot_send_message_to_channel(bot=config['bot'], channel_id=config['channel_id'], message=f'untitled: {new_name}')
     else:
-        for cdf_ in cdf:
+        for i, cdf_ in enumerate(cdf_short):
             target_dir = os.path.join(out_path, sanitize_filename(cdf_))
             if not os.path.isdir(target_dir):
                 os.makedirs(target_dir, exist_ok=False)
             new_path = get_unique_filename(os.path.join(target_dir, new_name))
             shutil.copy(original_file, new_path)
+            bot_send_message_to_channel(bot=config['bot'], channel_id=config['channel_id'], message=cdf[i])
 
 
 # _____ COMMON _____
