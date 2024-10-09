@@ -24,6 +24,8 @@ from src.utils import extract_text_with_fitz, image_split_top_bot, count_pages, 
 
 
 def main(connection: Union[None, Literal['http'], CDispatch]):
+
+    # __________ CONNECTION __________
     logger.print(f"CONNECTION: <{connection}>")
 
     # _____ PREPROCESSING FROM IN TO EDITED _____
