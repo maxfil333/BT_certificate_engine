@@ -30,6 +30,7 @@ def delete_all_files(dir_path: str):
 
 def bot_send_message_to_channel(bot: Bot, message: str, channel_id: str):
     async def send_message_to_channel(channel_id: int | str, message: str):
+        print(f"{channel_id=}\n{message=}")
         await bot.send_message(chat_id=channel_id, text=message)
         await bot.session.close()
 
