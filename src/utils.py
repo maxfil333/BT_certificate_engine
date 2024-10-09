@@ -16,7 +16,6 @@ from src.config import config
 
 
 # _____ FOLDERS _____
-# TODO: 123
 
 def delete_all_files(dir_path: str):
     for folder_ in os.scandir(dir_path):
@@ -33,6 +32,8 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
     doc_number = dct['Номер документа']
     doc_conos = dct['Номер коносамента']
     transactions = dct['Номера таможенных сделок']
+    cdf = dct['consignee_deal_feeder_short']
+
     if doc_type == 'коносамент':
         if not doc_conos:
             doc_conos = 'untitled_conos'
@@ -50,8 +51,8 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
         new_path = get_unique_filename(os.path.join(target_dir, new_name))
         shutil.copy(original_file, new_path)
     else:
-        for transaction in transactions:
-            target_dir = os.path.join(out_path, transaction)
+        for cdf_ in cdf:
+            target_dir = os.path.join(out_path, sanitize_filename(cdf_))
             if not os.path.isdir(target_dir):
                 os.makedirs(target_dir, exist_ok=False)
             new_path = get_unique_filename(os.path.join(target_dir, new_name))
@@ -169,7 +170,9 @@ def clear_waste_pages(pdf_path: str) -> bytes:
     return pdf_bytes.getvalue()
 
 
-def extract_pages(input_pdf: str | bytes, pages_to_keep: list[int], output_pdf_path: Optional[str] = None) -> Optional[bytes]:
+def extract_pages(input_pdf: str | bytes,
+                  pages_to_keep: list[int],
+                  output_pdf_path: Optional[str] = None) -> Optional[bytes]:
     """Извлечение страниц из PDF. Если output_pdf_path не задан, возвращает байты."""
 
     # Проверяем, что было передано: путь к файлу или байты

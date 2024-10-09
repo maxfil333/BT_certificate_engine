@@ -1,105 +1,20 @@
 import os
-import re
-import json
 import openai
 from PIL import Image
 from openai import OpenAI
 from time import perf_counter
 from dotenv import load_dotenv
-from typing import Union, Literal
-from win32com.client import CDispatch
 
 from src.logger import logger
 from src.config import config
-from src.utils import switch_to_latin, base64_encode_pil, try_exec
-from src.http_connector import cup_http_request
+from src.utils import base64_encode_pil
+
 
 start = perf_counter()
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
 client = OpenAI()
-
-
-def main_local_postprocessing(response, connection: Union[None, Literal['http'], CDispatch]):
-    dct = json.loads(response)
-    dct['Номера сделок'] = []
-    dct['Номера таможенных сделок'] = []
-    dct['Номера фсс'] = '%None%'
-
-    if dct['Тип документа'] == 'акт' and not re.fullmatch(r'\d{15}', dct['Номер документа'].strip()):
-        logger.print(f"! act number {dct['Номер документа']} is not valid !")
-
-    if len(dct['Номер коносамента']) < 5:
-        dct['Номер коносамента'] = ''
-
-    if connection and dct['Номер коносамента']:
-        conos_id = dct['Номер коносамента']
-        if connection == 'http':
-            trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', conos_id)
-            customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', conos_id)
-        else:
-            trans_number = try_exec(connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading,
-                                    conos_id)
-            customs_trans = try_exec(connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading,
-                                     conos_id)
-            trans_number = [x.strip() for x in trans_number.strip("|").split("|") if x.strip()]
-            customs_trans = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
-
-        dct['Номера сделок'] = trans_number
-        dct['Номера таможенных сделок'] = customs_trans
-
-    return json.dumps(dct, ensure_ascii=False, indent=4)
-
-
-def appendix_local_postprocessing(response, connection: Union[None, Literal['http'], CDispatch]):
-    dct = json.loads(response)
-    dct['result'] = {'fcc_numbers': None, "transaction_numbers": None}
-    fcc_numbers = []
-    for pos in dct['documents']:
-        doc_numbers = pos["Номера документов"]
-        for number in doc_numbers:
-            if number not in fcc_numbers:
-                fcc_numbers.append(number)
-    dct['result']['fcc_numbers'] = fcc_numbers
-
-    tr_numbers = []
-    if fcc_numbers:
-        for number in fcc_numbers:
-            if True:  # try in english
-                number_en = switch_to_latin(number)
-                if connection == 'http':
-                    customs_trans = cup_http_request(r'CustomsTransactionNumberFromBrokerDocument', number_en)
-                else:
-                    customs_trans = try_exec(
-                        connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
-                        number_en)
-            if not customs_trans:  # then try in russian
-                number_ru = switch_to_latin(number, reverse=True)
-                if connection == 'http':
-                    customs_trans = cup_http_request(r'CustomsTransactionNumberFromBrokerDocument', number_ru)
-                else:
-                    customs_trans = try_exec(
-                        connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
-                        number_ru)
-
-            if customs_trans:  # if some result
-                if connection == 'http':
-                    pass
-                else:
-                    customs_trans = [x.strip() for x in customs_trans.strip("|").split("|") if x.strip()]
-                tr_numbers.extend(customs_trans)
-
-        dct['result']['transaction_numbers'] = list(set(tr_numbers))
-    return json.dumps(dct, ensure_ascii=False, indent=4)
-
-
-def get_consignee_and_feeder(response: str, connection: Union[None, Literal['http'], CDispatch]):
-    """
-    :param response:   json formatted string
-    :param connection: connection type
-    """
-    pass
 
 
 # ___________________________ CHAT ___________________________

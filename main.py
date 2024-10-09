@@ -17,7 +17,9 @@ from src.logger import logger
 from src.config import config
 from src.com_connector import create_connection
 from src.main_edit import image_preprocessor
-from src.main_openai import run_chat, main_local_postprocessing, appendix_local_postprocessing
+from src.main_openai import run_chat
+from src.response_postprocessing import main_postprocessing, appendix_postprocessing
+from src.response_postprocessing import get_consignee_and_feeder, get_clean_transactions
 from src.utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former
 
 
@@ -64,11 +66,11 @@ def main(connection: Union[None, Literal['http'], CDispatch]):
                               text_mode_content=text_mode_content
                               )
             logger.print('result_cert:', result, sep='\n')
-            result = main_local_postprocessing(response=result, connection=connection)
-            result_dct = json.loads(result)
+            result = main_postprocessing(response=result, connection=connection)
             logger.print('main_local_postprocessing result:', result)
 
             # ___ если АКТ, то ищем в приложении ___
+            result_dct = json.loads(result)
             if (connection and result_dct['Тип документа'] == 'акт' and (not result_dct['Номера таможенных сделок'])
                     and original_file_num_pages >= 2):
                 # ___ создаем appendix ___
@@ -86,17 +88,21 @@ def main(connection: Union[None, Literal['http'], CDispatch]):
                                            response_format=config['appendix_response_format']
                                            )
                 logger.print('result_apdx:', result_appendix, sep='\n')
-                result_appendix = appendix_local_postprocessing(response=result_appendix, connection=connection)
+                result_appendix = appendix_postprocessing(response=result_appendix, connection=connection)
                 logger.print('appendix_local_postprocessing result:', result_appendix)
 
                 # ___ добавляем найденное в result ___
-                dct, dct_appendix = json.loads(result), json.loads(result_appendix)
-                fcc_numbers = dct_appendix['result']['fcc_numbers']
-                transaction_numbers = dct_appendix['result']['transaction_numbers']
-                dct['Номера фсс'] = fcc_numbers
-                dct['Номера таможенных сделок'] = transaction_numbers
-                result = json.dumps(dct, ensure_ascii=False, indent=4)
-                logger.print('merged result', result)
+                main_dict, appendix_dict = json.loads(result), json.loads(result_appendix)
+                main_dict['Номера таможенных сделок'] = appendix_dict['Номера таможенных сделок']
+                main_dict['Номера фсс'] = appendix_dict['Номера фсс']
+                result = json.dumps(main_dict, ensure_ascii=False, indent=4)
+                logger.print('merged result:', result)
+
+            # _____  GET CLEAN TRANSACTIONS _____
+            result = get_clean_transactions(result)
+
+            # _____  GET CONSIGNEE AND FEEDER _____
+            result = get_consignee_and_feeder(result, connection)
 
             # _____  COPY ORIGINAL FILE TO "OUT" _____
             folder_former(json_string=result, original_file=original_file, out_path=out_folder)
