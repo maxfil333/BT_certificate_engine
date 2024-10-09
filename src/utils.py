@@ -32,8 +32,10 @@ def bot_send_message_to_channel(bot: Bot, message: str, channel_id: str):
     async def send_message_to_channel(channel_id: int | str, message: str):
         await bot.send_message(chat_id=channel_id, text=message)
         await bot.session.close()
-
-    asyncio.run(send_message_to_channel(channel_id, message))
+    try:
+        asyncio.run(send_message_to_channel(channel_id, message))
+    except Exception:
+        logger.print(traceback.format_exc())
 
 
 def folder_former(json_string: str, original_file: str, out_path: str) -> None:
