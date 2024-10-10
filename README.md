@@ -7,9 +7,9 @@ config['channel_id'] = os.getenv('test_channel_id')
 ```
 - если нет (PROD):
 ```
+config['BASE_DIR'] = r"\\10.10.0.3\Docs\..."
 config['TOKEN'] = os.getenv('TOKEN')
 config['channel_id'] = os.getenv('channel_id')
-config['BASE_DIR'] = r"\\10.10.0.3\Docs\..."
 ```
 
 ## Настройка COM соединения 
