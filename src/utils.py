@@ -42,6 +42,8 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
     # ___ generate document name ___
     dct = json.loads(json_string)
     doc_type = dct['Тип документа']
+    show_doc_type = {'акт': 'Акт', 'коносамент': 'КС', 'заключение': 'Закл.', 'протокол': 'Протокол'}
+    transliteration = {'акт': 'act', 'коносамент': 'conos', 'заключение': 'report', 'протокол': 'protocol'}
     doc_number = dct['Номер документа']
     doc_conos = dct['Номер коносамента']
     transactions = dct['Номера таможенных сделок']
@@ -54,7 +56,6 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
         new_name = sanitize_filename(doc_conos + os.path.splitext(original_file)[-1])
     else:
         if not doc_number:
-            transliteration = {'акт': 'act', 'коносамент': 'conos', 'заключение': 'report', 'протокол': 'protocol'}
             doc_number = f'untitled_{transliteration[doc_type]}'
         new_name = sanitize_filename(doc_number + os.path.splitext(original_file)[-1])
 
@@ -72,7 +73,8 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
                 os.makedirs(target_dir, exist_ok=False)
             new_path = get_unique_filename(os.path.join(target_dir, new_name))
             shutil.copy(original_file, new_path)
-            bot_send_message_to_channel(bot=config['bot'], channel_id=config['channel_id'], message=cdf[i])
+            bot_send_message_to_channel(bot=config['bot'], channel_id=config['channel_id'],
+                                        message=f"{show_doc_type[doc_type]}: {cdf[i]}")
 
 
 # _____ COMMON _____
