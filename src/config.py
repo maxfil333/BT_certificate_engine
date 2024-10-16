@@ -89,7 +89,7 @@ CERT_JSON_SCHEMA = {
                 "type": "string"
             },
             "Номер коносамента": {
-                "description": "Номер коносамента | bill of lading number | b/l number | Waybill number",
+                "description": "Номер коносамента | bill of lading number | b/l number | Waybill number | B/L №",
                 "type": "string"
             }
         },
