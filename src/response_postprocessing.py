@@ -31,8 +31,8 @@ def main_postprocessing(response, connection: Union[None, Literal['http'], CDisp
             customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', conos_id)
 
             # на случай если 1) документ-коносамент 2) номер коносамента попал в поле "Номер документа"
-            logger.print('Trans..illOfLading and CustomsTrans..illOfLading search with conos_id and doc_id swap..')
             if (dct['Тип документа'] == 'коносамент') and doc_id and not (trans_number and customs_trans):
+                logger.print('Trans..illOfLading and CustomsTrans..illOfLading search with conos_id and doc_id swap..')
                 trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', doc_id)
                 customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', doc_id)
                 if trans_number or customs_trans:  # если так, то надо заполнить Номер коносамента
