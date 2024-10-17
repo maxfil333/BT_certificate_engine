@@ -24,9 +24,20 @@ def main_postprocessing(response, connection: Union[None, Literal['http'], CDisp
 
     if connection and dct['Номер коносамента']:
         conos_id = dct['Номер коносамента']
+        doc_id = dct['Номер документа']
         if connection == 'http':
+            logger.print('Trans..illOfLading and CustomsTrans..illOfLading search...')
             trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', conos_id)
             customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', conos_id)
+
+            # на случай если 1) документ-коносамент 2) номер коносамента попал в поле "Номер документа"
+            logger.print('Trans..illOfLading and CustomsTrans..illOfLading search with conos_id and doc_id swap..')
+            if (dct['Тип документа'] == 'коносамент') and doc_id and not (trans_number and customs_trans):
+                trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', doc_id)
+                customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', doc_id)
+                if trans_number or customs_trans:  # если так, то надо заполнить Номер коносамента
+                    dct['Номер коносамента'] = doc_id
+                    logger.print('Перенос коносамента из "Номера документа" в "Номер коносамента"')
         else:
             trans_number = try_exec(connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading,
                                     conos_id)
@@ -53,6 +64,7 @@ def appendix_postprocessing(response, connection: Union[None, Literal['http'], C
 
     transaction_numbers = []
     if connection and fcc_numbers:
+        logger.print('CustomsTransactionNumberFromBrokerDocument search...')
         for number in fcc_numbers:
             if True:  # try in english
                 number_en = switch_to_latin(number)
@@ -99,6 +111,8 @@ def get_consignee_and_feeder(response: str, connection: Union[None, Literal['htt
 
     func_name = r'UnitDataByTransactionNumber'
     params = r'СудноФидер,Грузополучатель'
+    logger.print('feeder and consignee from broker deal search...')
+
     for deal in clean_deals:
         if connection == 'http':
             feeder_and_consignee_request = cup_http_request(func_name, deal, params)
