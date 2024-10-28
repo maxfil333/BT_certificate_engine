@@ -8,7 +8,7 @@ from pdf2image import convert_from_path
 from src.logger import logger
 from src.config import config
 from src.document_classifier import text_classifier
-from src.utils import delete_all_files, image_split_top_bot
+from src.utils import delete_all_files, image_split_top_bot, magick_convert
 from src.utils import extract_text_with_fitz, is_scanned_pdf, extract_pages, clear_waste_pages
 
 
@@ -49,9 +49,10 @@ def image_preprocessor() -> None:
 
                 # take the first page (top half) to classify it using GPT
                 first_page = np.array(images[0])
-                first_page_top, _ = image_split_top_bot(first_page)
+                first_page_top, _ = image_split_top_bot(first_page, top_y_shift=0.1)
                 save_path = os.path.splitext(save_path)[0] + '.jpg'
                 first_page_top.save(save_path, quality=100)
+                magick_convert(save_path)
 
             # ___ pdf digital ___
             else:

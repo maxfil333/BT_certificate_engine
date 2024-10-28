@@ -7,6 +7,7 @@ import shutil
 import PyPDF2
 import asyncio
 import traceback
+import subprocess
 import numpy as np
 from PIL import Image
 from io import BytesIO
@@ -278,7 +279,20 @@ def base64_encode_pil(image: Image.Image):
 
 # _________ IMAGES _________
 
+def magick_convert(img_path: str) -> None:
+    try:
+        command = [config["magick_exe"], "convert", img_path, *config["magick_opt"], img_path]
+        subprocess.run(command)
+    except:
+        logger.print(f"magick error: {traceback.format_exc()}")
+
+
 def image_split_top_bot(image: str | np.ndarray, top_y_shift=0) -> tuple[Image.Image, Image.Image]:
+    """
+    :param image: path to image or np.ndarray;
+    :param top_y_shift: (0.0-1.0) shift from top;
+    :return: top, bot.
+    """
     if not 0 <= top_y_shift <= 1:
         raise ValueError('Значение должно быть в диапазоне от 0 до 1')
 

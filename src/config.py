@@ -45,6 +45,8 @@ print(f"IN: {config['IN']}\nEDITED: {config['EDITED']}\nOUT: {config['OUT']}")
 config['bot'] = Bot(token=config['TOKEN'], default=DefaultBotProperties(parse_mode='HTML'))
 
 # ___________________________ poppler | magick ___________________________
+config['magick_opt'] = '-colorspace Gray -quality 100 -units PixelsPerInch -density 350'.split(' ')
+
 if getattr(sys, 'frozen', False):  # в сборке
     config['POPPLER_PATH'] = os.path.join(sys._MEIPASS, 'poppler')
     config['magick_exe'] = os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
