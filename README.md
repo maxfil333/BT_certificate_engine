@@ -22,6 +22,7 @@ config['channel_id'] = os.getenv('channel_id')
 - install git
 - install python 3.11.9
 - install Visual C++ Redistributable for Visual Studio 2015
+- install ImageMagick https://imagemagick.org/script/download.php
 - git clone https://github.com/maxfil333/BT_certificate_bot.git 
 - python -m venv venv
 - venv\Scripts\activate
