@@ -81,6 +81,7 @@ CERT_JSON_SCHEMA = {
             },
             "Номера контейнеров": {
                 "type": "array",
+                "description": "[A-Z]{3}U[0-9]{7}",
                 "items": {
                     "type": "string"
                 }
@@ -89,7 +90,7 @@ CERT_JSON_SCHEMA = {
                 "type": "string"
             },
             "Номер коносамента": {
-                "description": "Номер коносамента | bill of lading number | b/l number | Waybill number | B/L №",
+                "description": "Номер коносамента | К/С | bill of lading number | b/l number | Waybill number | B/L №",
                 "type": "string"
             }
         },
