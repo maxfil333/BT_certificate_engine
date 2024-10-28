@@ -283,6 +283,7 @@ def magick_convert(img_path: str) -> None:
     try:
         command = [config["magick_exe"], "convert", img_path, *config["magick_opt"], img_path]
         subprocess.run(command)
+        logger.print('!imagemagicked!')
     except:
         logger.print(f"magick error: {traceback.format_exc()}")
 
