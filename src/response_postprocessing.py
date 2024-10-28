@@ -15,18 +15,29 @@ def main_postprocessing(response, connection: Union[None, Literal['http'], CDisp
     dct['Номера таможенных сделок'] = []
     dct['Номера фсс'] = '%None%'
 
-    if dct['Тип документа'] == 'акт' and not re.fullmatch(r'\d{15}', dct['Номер документа'].strip()):
-        logger.print(f"! act number {dct['Номер документа']} is not valid !")
-        dct['Номер документа'] = 'unrecognized_act'
-
     if len(dct['Номер коносамента']) < 5:
         dct['Номер коносамента'] = ''
+
+    if dct['Тип документа'] == 'акт':
+        # валидация номера акта
+        if not re.fullmatch(r'\d{15}', dct['Номер документа'].strip()):
+            logger.print(f"! act number {dct['Номер документа']} is not valid !")
+            dct['Номер документа'] = 'unrecognized_act'
+
+        # проверка контейнер и коносамент перепутаны
+        container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{6}-?[0-9]'
+        if dct['Номер коносамента'] and dct['Номера контейнеров'] and len(dct['Номера контейнеров']) == 1:
+            if not re.fullmatch(container_regex, dct['Номера контейнеров'][0]):
+                logger.print(f"Containers: {dct['Номера контейнеров']}, swap with conos {dct['Номер коносамента']}")
+                conos, container = dct['Номер коносамента'], dct['Номера контейнеров'][0]
+                dct['Номер коносамента'] = container
+                dct['Номера контейнеров'] = [conos]
 
     if connection and dct['Номер коносамента']:
         conos_id = dct['Номер коносамента']
         doc_id = dct['Номер документа']
         if connection == 'http':
-            logger.print('Trans..illOfLading and CustomsTrans..illOfLading search...')
+            logger.print('TransactionNumberFromBillOfLading and CustomsTransactionFromBillOfLading search...')
             trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', conos_id)
             customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', conos_id)
 
