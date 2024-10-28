@@ -67,6 +67,15 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
         new_path = get_unique_filename(os.path.join(target_dir, new_name))
         shutil.copy(original_file, new_path)
         bot_send_message_to_channel(bot=config['bot'], channel_id=config['channel_id'], message=f'untitled: {new_name}')
+
+        # untitled files debug copy
+        try:
+            debug_path = get_unique_filename(os.path.join(r"\\10.10.0.3\Docs\Transfer\Filipp\0_engine_untitled_files",
+                                                          new_name))
+            shutil.copy(original_file, debug_path)
+        except:
+            logger.print(traceback.format_exc())
+
     else:
         for i, cdf_ in enumerate(cdf_short):
             target_dir = os.path.join(out_path, sanitize_filename(cdf_))
