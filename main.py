@@ -72,8 +72,8 @@ def main(connection: Union[None, Literal['http'], CDispatch]):
             logger.print('main_local_postprocessing result:', result)
 
             # ___ если АКТ, то ищем в приложении ___
-            result_dct = json.loads(result)
-            if (connection and result_dct['Тип документа'] == 'акт' and (not result_dct['Номера таможенных сделок'])
+            res_dct = json.loads(result)
+            if (connection and res_dct['Тип документа'] == 'акт' and (not res_dct['Номера таможенных сделок'])
                     and original_file_num_pages >= 2):
                 # ___ создаем appendix ___
                 act_second_page = convert_from_path(original_file, first_page=2, last_page=2, fmt='jpg',
@@ -169,10 +169,10 @@ if __name__ == '__main__':
     DEFAULT_SLEEP_TIME = 20
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-st',  '--sleep_time',        type=int,            help='time between launches')
-    parser.add_argument('-sl',  '--single_launch',     action='store_true', help='run only once')
+    parser.add_argument('-st', '--sleep_time', type=int, help='time between launches')
+    parser.add_argument('-sl', '--single_launch', action='store_true', help='run only once')
     parser.add_argument('-ucc', '--use_com_connector', action='store_true', help='use com connector')
-    parser.add_argument('-ic',  '--ignore_connection', action='store_true', help='run without 1C connection')
+    parser.add_argument('-ic', '--ignore_connection', action='store_true', help='run without 1C connection')
     args = parser.parse_args()
 
     main_loop(

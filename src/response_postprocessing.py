@@ -41,7 +41,7 @@ def main_postprocessing(response, connection: Union[None, Literal['http'], CDisp
             trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', conos_id)
             customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', conos_id)
 
-            # на случай если 1) документ-коносамент 2) номер коносамента попал в поле "Номер документа"
+            # на случай если 1) Тип документа - коносамент 2) номер коносамента попал в поле "Номер документа"
             if (dct['Тип документа'] == 'коносамент') and doc_id and not (trans_number and customs_trans):
                 logger.print('Trans..illOfLading and CustomsTrans..illOfLading search with conos_id and doc_id swap..')
                 trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', doc_id)

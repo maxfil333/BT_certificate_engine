@@ -49,7 +49,7 @@ def image_preprocessor() -> None:
 
                 # take the first page (top half) to classify it using GPT
                 first_page = np.array(images[0])
-                first_page_top, _ = image_split_top_bot(first_page, top_y_shift=0.1)
+                first_page_top, _ = image_split_top_bot(first_page, top_y_shift=0)
                 save_path = os.path.splitext(save_path)[0] + '.jpg'
                 first_page_top.save(save_path, quality=100)
                 magick_convert(save_path)
