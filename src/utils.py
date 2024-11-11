@@ -73,6 +73,7 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
             debug_path = get_unique_filename(os.path.join(r"\\10.10.0.3\Docs\Transfer\Filipp\0_engine_untitled_files",
                                                           new_name))
             shutil.copy(original_file, debug_path)
+            logger.save(r"\\10.10.0.3\Docs\Transfer\Filipp\0_engine_untitled_files")
         except:
             logger.print(traceback.format_exc())
 
