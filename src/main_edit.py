@@ -64,7 +64,7 @@ def image_preprocessor() -> None:
                 else:
                     cleared = clear_waste_pages(file)
                     extract_pages(cleared, pages_to_keep=[1, 2, 3], output_pdf_path=save_path)  # max_pages to model = 3
-                file_params.append(pdf_class)
+                file_params.append(pdf_class if pdf_class else 'no_text_class')
 
         # _____ images _____
         else:
