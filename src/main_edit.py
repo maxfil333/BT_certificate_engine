@@ -1,7 +1,7 @@
 import os
 import json
-
 import numpy as np
+from PIL import Image
 from glob import glob
 from pdf2image import convert_from_path
 
@@ -33,7 +33,8 @@ def image_preprocessor() -> None:
         clear_name = os.path.splitext(os.path.split(file)[-1])[0]
         folder_path = f'{os.path.join(edit_folder, clear_name)}({ext.replace(".", "")})'
         os.makedirs(folder_path, exist_ok=False)
-        save_path = os.path.join(folder_path, os.path.basename(file))
+        os.makedirs(os.path.join(folder_path, 'extra_data'), exist_ok=False)
+        save_path = os.path.join(folder_path, clear_name + ext.lower())
 
         file_params: list = list()
         # _____ pdf _____
@@ -47,8 +48,13 @@ def image_preprocessor() -> None:
                                            poppler_path=config["POPPLER_PATH"],
                                            jpegopt={"quality": 100})
 
-                # take the first page (top half) to classify it using GPT
+                # save first page image
                 first_page = np.array(images[0])
+                first_page_save_path = os.path.join(os.path.dirname(os.path.splitext(save_path)[0]),
+                                                    'extra_data/first_page_image.jpg')
+                Image.fromarray(first_page).save(first_page_save_path, quality=100)
+
+                # take the first page (top half) to classify it using GPT
                 first_page_top, _ = image_split_top_bot(first_page, top_y_shift=0)
                 save_path = os.path.splitext(save_path)[0] + '.jpg'
                 first_page_top.save(save_path, quality=100)
@@ -69,6 +75,12 @@ def image_preprocessor() -> None:
         # _____ images _____
         else:
             file_params.append('image')
+
+            # save first page image
+            first_page_save_path = os.path.join(os.path.dirname(os.path.splitext(save_path)[0]),
+                                                'extra_data/first_page_image.jpg')
+            Image.open(file).save(first_page_save_path, quality=100)
+
             top, _ = image_split_top_bot(file)
             top.save(save_path, quality=100)
 
