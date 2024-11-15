@@ -109,3 +109,12 @@ if __name__ == '__main__':
 
     func_name = r'CustomsTransactionNumberFromBrokerDocument'
     print(5, cup_http_request(func_name, r'09901230710012475643P'))  # -> list
+
+    func_name = r'CustomsTransactionNumberFromBrokerDocument'
+    print(6, cup_http_request(func_name, r'FCCNAME'))  # -> list
+
+    func_name = r'CustomsTransactionFromBillOfLading'
+    print(7, cup_http_request(func_name, r'CONOSNAME'))  # -> list
+
+
+    # todo: СДЕЛКИ С СУДНА > ГРУЗОПОЛУЧАТЕЛИ > СРАВНИТЬ С АКТ.ИМПОРТЕР(ГРУЗОПОЛУЧАТЕЛЬ) ЕСЛИ 1 СОВП. > tg.MESSAGE (ВОЗМОЖНО...)
