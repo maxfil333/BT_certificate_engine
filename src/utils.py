@@ -14,7 +14,6 @@ from io import BytesIO
 from aiogram import Bot
 from typing import Optional
 
-
 from src.logger import logger
 from src.config import config
 
@@ -33,6 +32,7 @@ def bot_send_message_to_channel(bot: Bot, message: str, channel_id: str):
     async def send_message_to_channel(channel_id: int | str, message: str):
         await bot.send_message(chat_id=channel_id, text=message)
         await bot.session.close()
+
     try:
         asyncio.run(send_message_to_channel(channel_id, message))
     except Exception:
@@ -317,6 +317,44 @@ def image_split_top_bot(image: str | np.ndarray, top_y_shift=0) -> tuple[Image.I
     bot = pil_image.crop((0, pil_image.height // 2,
                           pil_image.width, pil_image.height))
     return top, bot
+
+
+def image_split_y_gap(image: str | np.ndarray, y_shift_top: float = 0, y_shift_bot: float = 0) -> Image.Image:
+    """
+    :param image: path_to_image OR np.ndarray;
+    :param y_shift_top: (0.0-1.0) shift from top;
+    :param y_shift_bot: (0.0-1.0) shift from top + gap;
+    :return: cropped_image;
+    """
+    if (0 <= y_shift_top <= 1) and (not 0 <= y_shift_bot <= 1):
+        raise ValueError('Значение должно быть в диапазоне от 0 до 1')
+    if y_shift_bot <= y_shift_top:
+        raise ValueError('Значение верхнего отступа должно быть меньше значения нижнего отступа')
+
+    # 1, 3 -> x; 2, 4 -> y
+    if isinstance(image, np.ndarray):
+        pil_image = Image.fromarray(image)
+    else:
+        pil_image = Image.open(image)
+
+    cropped = pil_image.crop((0, pil_image.height * y_shift_top,
+                              pil_image.width, pil_image.height * y_shift_bot))
+
+    return cropped
+
+
+def release_crop_and_save(first_page_image: str) -> str:
+    """
+    saves release.jpg near the file
+    :return saved file path
+    """
+
+    base, ext = os.path.splitext(first_page_image)
+
+    result = image_split_y_gap(first_page_image, 0.65, 0.85)
+    release_save_path = os.path.join(os.path.dirname(base), 'release' + ext)
+    result.save(release_save_path)
+    return release_save_path
 
 
 # _________ SERVICES _________
