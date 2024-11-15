@@ -20,6 +20,7 @@ from src.main_edit import image_preprocessor
 from src.main_openai import run_chat
 from src.response_postprocessing import main_postprocessing, appendix_postprocessing
 from src.response_postprocessing import get_consignee_and_feeder, get_clean_transactions
+from src.release_postprocessing import add_release_permitted
 from src.utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former
 
 
@@ -69,7 +70,6 @@ def main(connection: Union[None, Literal['http'], CDispatch]):
                               )
             logger.print('result_cert:', result, sep='\n')
             result = main_postprocessing(response=result, connection=connection)
-            logger.print('main_local_postprocessing result:', result)
 
             # ___ если АКТ, то ищем в приложении ___
             res_dct = json.loads(result)
@@ -98,7 +98,6 @@ def main(connection: Union[None, Literal['http'], CDispatch]):
                 main_dict['Номера таможенных сделок'] = appendix_dict['Номера таможенных сделок']
                 main_dict['Номера фсс'] = appendix_dict['Номера фсс']
                 result = json.dumps(main_dict, ensure_ascii=False, indent=4)
-                logger.print('merged result:', result)
 
             # _____  GET CLEAN TRANSACTIONS _____
             result = get_clean_transactions(result)
@@ -106,11 +105,18 @@ def main(connection: Union[None, Literal['http'], CDispatch]):
             # _____  GET CONSIGNEE AND FEEDER _____
             result = get_consignee_and_feeder(result, connection)
 
+            # _____  ADD RELEASE TO RESULT _____
+            result = add_release_permitted(current_folder=folder, result=result)
+
             # _____  COPY ORIGINAL FILE TO "OUT" _____
             folder_former(json_string=result, original_file=original_file, out_path=out_folder)
 
             # _____  DELETE ORIGINAL FILE FROM "IN" _____
             os.unlink(original_file)
+
+            # _____  PRINT RESULT JSON  _____
+            logger.print("RESULT JSON:")
+            logger.print(result)
 
         except PermissionDeniedError:
             raise
