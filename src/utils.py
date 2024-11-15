@@ -16,6 +16,7 @@ from typing import Optional
 
 from src.logger import logger
 from src.config import config
+from src.post_cup import post_load_afk_conos
 
 
 # _____ FOLDERS _____
@@ -54,10 +55,12 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
     if doc_type == 'коносамент':
         if not doc_conos:
             doc_conos = 'untitled_conos'
+            dct['Номер коносамента'] = doc_conos
         new_name = sanitize_filename(doc_conos + os.path.splitext(original_file)[-1])
     else:
         if not doc_number:
             doc_number = f'untitled_{transliteration[doc_type]}'
+            dct['Номер документа'] = doc_number
         new_name = sanitize_filename(doc_number + os.path.splitext(original_file)[-1])
 
     # ___ distribute into folders ___
@@ -78,6 +81,7 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
             logger.print(traceback.format_exc())
 
     else:
+        new_path = ''
         for i, cdf_ in enumerate(cdf_short):
             target_dir = os.path.join(out_path, sanitize_filename(cdf_))
             if not os.path.isdir(target_dir):
@@ -87,10 +91,18 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
             bot_send_message_to_channel(bot=config['bot'], channel_id=config['channel_id'],
                                         message=f"{show_doc_type[doc_type]}: {cdf[i]}")
 
+        # POSTING AFK|CONOS to CUP
+        if doc_type in ['акт', 'коносамент']:
+            logger.print('POSTING AFK|CONOS to CUP ...')
+            post_result = post_load_afk_conos(dct=dct,
+                                              original_file=original_file,
+                                              new_save_path=new_path, test=config['DEBUG'])
+            logger.print(post_result)
+
 
 # _____ COMMON _____
 
-def get_unique_filename(filepath):
+def get_unique_filename(filepath) -> str:
     if not os.path.exists(filepath):
         return filepath
     else:
