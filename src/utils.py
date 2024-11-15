@@ -92,12 +92,15 @@ def folder_former(json_string: str, original_file: str, out_path: str) -> None:
                                         message=f"{show_doc_type[doc_type]}: {cdf[i]}")
 
         # POSTING AFK|CONOS to CUP
-        if doc_type in ['акт', 'коносамент']:
-            logger.print('POSTING AFK|CONOS to CUP ...')
-            post_result = post_load_afk_conos(dct=dct,
-                                              original_file=original_file,
-                                              new_save_path=new_path, test=config['DEBUG'])
-            logger.print(post_result)
+        try:
+            if doc_type in ['акт', 'коносамент']:
+                logger.print('POSTING AFK|CONOS to CUP ...')
+                post_result = post_load_afk_conos(dct=dct,
+                                                  original_file=original_file,
+                                                  new_save_path=new_path, test=config['DEBUG'])
+                logger.print(post_result)
+        except:
+            logger.print("POSTING OUTER ERROR:", traceback.format_exc(), sep='\n')
 
 
 # _____ COMMON _____

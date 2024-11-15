@@ -14,6 +14,8 @@ from src.utils import extract_text_with_fitz, is_scanned_pdf, extract_pages, cle
 
 def image_preprocessor() -> None:
     """ preprocess and copy images from IN to EDITED """
+    # TODO: проверять ориентацию акта (высота должна быть больше ширины).
+    #  Если ориентация плохая не обрабатывать а сразу в untitled
 
     logger.print('main_edit.image_preprocessor...')
     in_folder, edit_folder = config['IN'], config['EDITED']
