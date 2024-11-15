@@ -23,6 +23,7 @@ config['V83_CONN_STRING'] = f"Srvr=kappa; Ref=CUP; Usr={config['user_1C']}; Pwd=
 DEBUG_JSON = os.path.join(config['PROJECT_DIR'], 'DEBUG.json')
 
 if os.path.exists(DEBUG_JSON):  # TEST
+    config['DEBUG'] = True
     with open(DEBUG_JSON, 'r', encoding='utf-8-sig') as file:
         config['BASE_DIR'] = json.load(file)['BASE_DIR']
     config['TOKEN'] = os.getenv('TEST_TOKEN')
@@ -30,6 +31,7 @@ if os.path.exists(DEBUG_JSON):  # TEST
     print(f"\"DEBUG.json\" was found in: {DEBUG_JSON}.\nBASE DIR = {config['BASE_DIR']}\n")
 
 else:  # PROD
+    config['DEBUG'] = False
     config['BASE_DIR'] = r"\\10.10.0.3\Docs\CUSTOM\0 Документы с Районов"
     config['TOKEN'] = os.getenv('TOKEN')
     config['channel_id'] = os.getenv('channel_id')
