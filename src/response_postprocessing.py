@@ -34,31 +34,34 @@ def main_postprocessing(response, connection: Union[None, Literal['http'], CDisp
                 dct['Номера контейнеров'] = [conos]
 
     if connection and dct['Номер коносамента']:
-        conos_id = dct['Номер коносамента']
-        doc_id = dct['Номер документа']
+        conos = dct['Номер коносамента']
         if connection == 'http':
             logger.print('TransactionNumberFromBillOfLading and CustomsTransactionFromBillOfLading search...')
-            trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', conos_id)
-            customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', conos_id)
-
-            # на случай если 1) Тип документа - коносамент 2) номер коносамента попал в поле "Номер документа"
-            if (dct['Тип документа'] == 'коносамент') and doc_id and not (trans_number and customs_trans):
-                logger.print('Trans..illOfLading and CustomsTrans..illOfLading search with conos_id and doc_id swap..')
-                trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', doc_id)
-                customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', doc_id)
-                if trans_number or customs_trans:  # если так, то надо заполнить Номер коносамента
-                    dct['Номер коносамента'] = doc_id
-                    logger.print('Перенос коносамента из "Номера документа" в "Номер коносамента"')
+            trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', conos)
+            customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', conos)
         else:
             trans_number = try_exec(connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading,
-                                    conos_id)
+                                    conos)
             customs_trans = try_exec(connection.InteractionWithExternalApplications.CustomsTransactionFromBillOfLading,
-                                     conos_id)
+                                     conos)
             trans_number = [x.strip() for x in trans_number if x.strip()]
             customs_trans = [x.strip() for x in customs_trans if x.strip()]
 
         dct['Номера сделок'] = trans_number
         dct['Номера таможенных сделок'] = customs_trans
+
+    # если "Номер коносамента" попал в "Номер документа"
+    if connection and dct['Тип документа'] == 'коносамент':
+        document = dct['Номер документа']
+        if document and not (dct['Номера сделок'] or dct['Номера таможенных сделок']):
+            logger.print('Trans..illOfLading and CustomsTrans..illOfLading search with conos and document swap..')
+            trans_number = cup_http_request(r'TransactionNumberFromBillOfLading', document)
+            customs_trans = cup_http_request(r'CustomsTransactionFromBillOfLading', document)
+            if trans_number or customs_trans:  # если так, то надо заполнить Номер коносамента
+                dct['Номер коносамента'] = document
+                dct['Номера сделок'] = trans_number
+                dct['Номера таможенных сделок'] = customs_trans
+                logger.print('Коносамент перенесен из "Номера документа" в "Номер коносамента"')
 
     return json.dumps(dct, ensure_ascii=False, indent=4)
 
