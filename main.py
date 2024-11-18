@@ -69,6 +69,13 @@ def main(connection: Union[None, Literal['http'], CDispatch]):
                               text_mode_content=text_mode_content
                               )
             logger.print('result_cert:', result, sep='\n')
+
+            # --------------- ДЛЯ ТЕСТИРОВАНИЯ ---------------
+            # result = """
+            # {"Тип документа": "коносамент", "Номер документа": "MEDUOE857067", "Номера контейнеров": [],
+            # "Судно": "MSC YANG R", "Номер коносамента": ""}
+            # """.strip()
+
             result = main_postprocessing(response=result, connection=connection)
 
             # ___ если АКТ, то ищем в приложении ___
