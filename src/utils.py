@@ -334,14 +334,17 @@ def image_split_top_bot(image: str | np.ndarray, top_y_shift=0) -> tuple[Image.I
     return top, bot
 
 
-def image_split_y_gap(image: str | np.ndarray, y_shift_top: float = 0, y_shift_bot: float = 0) -> Image.Image:
+def image_split_y_gap(image: str | np.ndarray, y_shift_top: float = 0, y_shift_bot: float = 0, left_shift: float = 0,
+                      right_shift: float = 1) -> Image.Image:
     """
     :param image: path_to_image OR np.ndarray;
     :param y_shift_top: (0.0-1.0) shift from top;
     :param y_shift_bot: (0.0-1.0) shift from top + gap;
+    :param left_shift: (0.0-1.0) shift from left border; default = 0
+    :param right_shift: (0.0-1.0) shift from left border; default = 1
     :return: cropped_image;
     """
-    if (0 <= y_shift_top <= 1) and (not 0 <= y_shift_bot <= 1):
+    if not ((0 <= y_shift_top <= 1) and (0 <= y_shift_bot <= 1) and (0 <= left_shift <= 1) and (0 <= right_shift <= 1)):
         raise ValueError('Значение должно быть в диапазоне от 0 до 1')
     if y_shift_bot <= y_shift_top:
         raise ValueError('Значение верхнего отступа должно быть меньше значения нижнего отступа')
@@ -352,8 +355,8 @@ def image_split_y_gap(image: str | np.ndarray, y_shift_top: float = 0, y_shift_b
     else:
         pil_image = Image.open(image)
 
-    cropped = pil_image.crop((0, pil_image.height * y_shift_top,
-                              pil_image.width, pil_image.height * y_shift_bot))
+    cropped = pil_image.crop((pil_image.width * left_shift, pil_image.height * y_shift_top,
+                              pil_image.width * right_shift, pil_image.height * y_shift_bot))
 
     return cropped
 
@@ -366,7 +369,7 @@ def release_crop_and_save(first_page_image: str) -> str:
 
     base, ext = os.path.splitext(first_page_image)
 
-    result = image_split_y_gap(first_page_image, 0.65, 0.85)
+    result = image_split_y_gap(first_page_image, y_shift_top=0.65, y_shift_bot=0.85, left_shift=0.1, right_shift=0.9)
     release_save_path = os.path.join(os.path.dirname(base), 'release' + ext)
     result.save(release_save_path)
     return release_save_path
