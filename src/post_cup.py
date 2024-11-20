@@ -40,6 +40,7 @@ def post_load_afk_conos(dct: dict, original_file: str, new_save_path: str, test=
             POST_BODY["Параметры"]["НомерСделки"] = transaction
             POST_BODY["Параметры"]["НомерАФК"] = dct['Номер документа']
             POST_BODY["Параметры"]["ТипАФК"] = dct['release']
+            POST_BODY["Параметры"]["ТипАФК_номер"] = dct['release_number']
             POST_BODY["Параметры"]["Данные"] = {}
             POST_BODY["Параметры"]["Данные"]["ИмяФайла"] = os.path.basename(new_save_path)
             POST_BODY["Параметры"]["Данные"]["ДвоичныеДанные"] = encode_file(original_file)
