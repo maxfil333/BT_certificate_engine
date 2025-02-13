@@ -385,5 +385,16 @@ def try_exec(function, *args, return_when_fails=''):
         return return_when_fails
 
 
+# _________________________________________________________________________________________________________________ TEXT
+
+def clean_fcc_numbers(text: str):
+    regex = r'(.*) (от) (.*)'
+    match = re.fullmatch(regex, text, flags=re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    else:
+        return text
+
+
 if __name__ == '__main__':
     pass
