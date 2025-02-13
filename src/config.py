@@ -97,7 +97,7 @@ CERT_JSON_SCHEMA = {
             },
             "Номера контейнеров": {
                 "type": "array",
-                "description": "[A-Z]{3}U[0-9]{7}",
+                "description": "[A-Z]{3}U ?[0-9]{7}",
                 "items": {
                     "type": "string"
                 }
@@ -142,11 +142,14 @@ APDX_JSON_SCHEMA = {
                                 "type": "string"
                             }
                         },
-                        "Дата": {
-                            "type": "string"
-                        }
+                        "Даты": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
                     },
-                    "required": ["Номера документов", "Дата"],
+                    "required": ["Номера документов", "Даты"],
                     "additionalProperties": False
                 }
             }
