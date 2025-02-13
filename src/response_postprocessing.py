@@ -5,7 +5,7 @@ from typing import Union, Literal
 from win32com.client import CDispatch
 
 from src.logger import logger
-from src.utils import switch_to_latin, try_exec
+from src.utils import switch_to_latin, try_exec, clean_fcc_numbers
 from src.http_connector import cup_http_request
 
 
@@ -76,6 +76,8 @@ def appendix_postprocessing(response, connection: Union[None, Literal['http'], C
             if number not in fcc_numbers:
                 fcc_numbers.append(number)
 
+    fcc_numbers = list(map(lambda x: clean_fcc_numbers(x), fcc_numbers))
+
     transaction_numbers = []
     if connection and fcc_numbers:
         logger.print('CustomsTransactionNumberFromBrokerDocument search...')
@@ -97,6 +99,26 @@ def appendix_postprocessing(response, connection: Union[None, Literal['http'], C
                         customs_trans = try_exec(
                             connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
                             number_ru)
+            if not customs_trans:  # then try to delete all spaces
+                number = number.replace(" ", "")
+                if True:  # try in english
+                    number_en = switch_to_latin(number)
+                    if connection == 'http':
+                        customs_trans = cup_http_request(r'CustomsTransactionNumberFromBrokerDocument', number_en)
+                    else:
+                        customs_trans = try_exec(
+                            connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
+                            number_en)
+                if not customs_trans:  # then try in russian
+                    number_ru = switch_to_latin(number, reverse=True)
+                    if number_ru != number_en:
+                        if connection == 'http':
+                            customs_trans = cup_http_request(r'CustomsTransactionNumberFromBrokerDocument', number_ru)
+                        else:
+                            customs_trans = try_exec(
+                                connection.InteractionWithExternalApplications.CustomsTransactionNumberFromBrokerDocument,
+                                number_ru)
+
             if customs_trans:  # if some result
                 transaction_numbers.extend(customs_trans)
 
