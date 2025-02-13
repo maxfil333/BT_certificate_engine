@@ -157,14 +157,14 @@ def get_consignee_and_feeder(response: str, connection: Union[None, Literal['htt
                 connection.InteractionWithExternalApplications.UnitDataByTransactionNumber, deal, params
             )
         if isinstance(feeder_and_consignee_request, dict):
-            ship = feeder_and_consignee_request.get('СудноФидер', '')
-            consignee = feeder_and_consignee_request.get('Грузополучатель', '')
+            ship = feeder_and_consignee_request.get('СудноФидер', [''])
+            consignee = feeder_and_consignee_request.get('Грузополучатель', [''])
         else:
             ship = ""
             consignee = ""
 
-        dct['feeder_ships'].append(ship)
-        dct['consignees'].append(consignee)
+        dct['feeder_ships'].append(ship[0])
+        dct['consignees'].append(consignee[0])
 
     dct['consignee_deal_feeder'] = [f"{c}_{d}_{f}"
                                     for c, d, f in
