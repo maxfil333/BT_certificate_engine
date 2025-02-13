@@ -23,6 +23,8 @@ from src.response_postprocessing import get_consignee_and_feeder, get_clean_tran
 from src.release_postprocessing import add_release_permitted
 from src.utils import extract_text_with_fitz, image_split_top_bot, count_pages, folder_former
 
+# TODO: Добавить поиск сделки в актах не только по коносаменту но и по контейнеру
+
 
 def main(connection: Union[None, Literal['http'], CDispatch]):
 
